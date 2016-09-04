@@ -19,16 +19,17 @@
  * IN THE SOFTWARE.
 */
 
-#include "test.h"
+# include "test.h"
 
-struct {
-    TEST_POOL_T *mp;
-
-} test_h = {NULL};
+test_h_t test_h = {NULL, 0, 0};
 
 int main(void) {
     test_h.mp = TEST_NEW_POOL(NULL, TEST_LINE_SIZE);
     TEST_ASSERT(test_h.mp != NULL);
+
+    test_h.source = (uint) time(NULL);
+
+    srand(test_h.source);
 
     test_main(test_h.mp);
 
@@ -55,4 +56,13 @@ int test_check(void *ptr, size_t size)
             return -1;
     }
     return 0;
+}
+
+int test_rand(void)
+{
+    if (0 == (++test_h.tik % TEST_SEED_EVERY) ) {
+        test_h.source += (uint) time(NULL) + test_h.tik;
+        srand(test_h.source);
+    }
+    return (rand() + 1) % TEST_MAX_RAND;
 }

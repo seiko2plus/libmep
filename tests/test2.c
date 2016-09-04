@@ -19,21 +19,52 @@
  * IN THE SOFTWARE.
 */
 
-#include "test.h"
+# include "test.h"
+
+# define ALLOC_NUM 1000
 
 void test_main (TEST_POOL_T *mp)
 {
-//    /void      *ptr = NULL;
+    void **ptr_arr;
+    uint  *size_arr;
+    uint   i;
+    size_t total_alloc = 0;
 #   ifdef TEST_CHECK_STATS
     mep_stat_t stat;
 #   endif
 
+    TEST_PRINT("Allocate ptr array for %u", ALLOC_NUM);
+    ptr_arr = TEST_ALLOC(mp, sizeof(void*) * ALLOC_NUM);
+    TEST_ASSERT(ptr_arr != NULL);
+    size_arr   = TEST_ALLOC(mp, sizeof(uint) * ALLOC_NUM);
+    TEST_ASSERT(size_arr != NULL);
+    TEST_SUCS("[PASSED]");
 
+    TEST_PRINT("Fill %u random sizes", ALLOC_NUM);
+    for (i = 0; i < ALLOC_NUM; i++) {
+        size_arr[i]  = test_rand();
+        total_alloc += size_arr[i];
+        ptr_arr[i]   = TEST_ALLOC(mp, size_arr[i]);
+        TEST_ASSERT(ptr_arr[i] != NULL);
+        test_fill(ptr_arr[i], size_arr[i]);
+    }
+    TEST_SUCS("[PASSED]");
 
+    TEST_PRINT("Check and free %u random sizes with size %lu", ALLOC_NUM, total_alloc);
+    for (i = 0; i < ALLOC_NUM; i++) {
+        TEST_ASSERT(0 == test_check(ptr_arr[i], size_arr[i]));
+        TEST_FREE(mp, ptr_arr[i]);
+    }
+    TEST_SUCS("[PASSED]");
+
+    TEST_FREE(mp, ptr_arr);
+    TEST_FREE(mp, size_arr);
 
 #   ifdef TEST_CHECK_STATS
     TEST_PRINT("Stats");
     mep_stat(mp, &stat);
+    TEST_ASSERT(stat.use_count   == 0);
+    TEST_ASSERT(stat.unuse_count == stat.lines);
 #   endif
     TEST_SUCS("[PASSED]");
 }

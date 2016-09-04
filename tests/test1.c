@@ -23,8 +23,8 @@
 
 void test_main (TEST_POOL_T *mp)
 {
-    void      *ptr, *rptr;
-    size_t     size;
+    void   *ptr, *rptr;
+    size_t  size;
 #   ifdef TEST_CHECK_STATS
     mep_stat_t stat;
 #   endif

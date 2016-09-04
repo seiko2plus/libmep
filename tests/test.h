@@ -26,6 +26,7 @@
 # include <stdlib.h>
 # include <stdio.h>
 # include <string.h>
+# include <time.h>
 
 # if defined(_MSC_VER) && _MSC_VER < 1600
 #   include "../src/stdint-msvc2008.h"
@@ -55,12 +56,21 @@ do { \
 # define TEST_FREE(POOL, PTR)           mep_free(POOL, PTR)
 
 # define TEST_POOL_T      mep_t
-# define TEST_LINE_SIZE   (1024 * 1024 * 10)
+# define TEST_LINE_SIZE   (1024 * 1024 * 100)
 # define TEST_CHECK_STATS 1
+# define TEST_SEED_EVERY  10
+# define TEST_MAX_RAND    1024 * 1024
 
+typedef struct {
+    TEST_POOL_T *mp;
+    uint  tik;
+    uint  source;
+} test_h_t;
 
-void test_main  (TEST_POOL_T *mp);
-void test_fill  (void *ptr, size_t size);
-int  test_check (void *ptr, size_t size);
+extern test_h_t test_h;
 
+void   test_main       (TEST_POOL_T *mp);
+void   test_fill       (void *ptr, size_t size);
+int    test_check      (void *ptr, size_t size);
+int    test_rand       (void);
 # endif /* TEST_H */
