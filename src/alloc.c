@@ -68,7 +68,7 @@ split:
          * check if the first piece has next piece so we pass it
          * and fix prev size
         */
-        if (MEP_HAS_NEXT(pc)) {
+        if (MEP_HAVE_NEXT(pc)) {
              npc->flags |= MEP_FLAG_NEXT;
              MEP_NEXT_PIECE(npc)->prev = diff;
         }
@@ -79,7 +79,7 @@ split:
         DL_APPEND(mp->unuses, tmp);
         /*
          * return piece ptr
-         * and pass only hasNext flag
+         * and pass only next flag
          * next one is the new splited piece
         */
         pc->flags = MEP_FLAG_NEXT;

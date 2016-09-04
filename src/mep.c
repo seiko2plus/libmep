@@ -91,7 +91,7 @@ void mep_stat(mep_t *mp, mep_stat_t *stat)
         for(;;) {
             if (pc->flags & MEP_FLAG_UNUSE) {
                 stat->unuse_count++;
-                stat->free += pc->size;
+                stat->available += pc->size;
             } else {
                 stat->use_count++;
                 stat->left += pc->left;

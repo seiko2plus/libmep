@@ -56,8 +56,7 @@ extern "C" {
 # endif
 
 /*
- * must be higher than MEP_PIECE_SIZE + MEP_UNUSE_SIZE
- * look at REF_1 AND REF_2
+ * Must be higher than MEP_PIECE_SIZE + MEP_UNUSE_SIZE
 */
 # ifndef MEP_SPLIT_SIZE
 #   define MEP_SPLIT_SIZE (MEP_ALIGN_SIZE * 10)
@@ -101,8 +100,8 @@ extern "C" {
 # define MEP_NEXT_PIECE(PC) ((mep_piece_t*)  MEP_PTR(PC  + (PC->size + MEP_PIECE_SIZE)))
 # define MEP_PREV_PIECE(PC) ((mep_piece_t*)  MEP_PTR(PC  - PC->prev))
 # define MEP_UNUSE(PC)      ((mep_unuse_t*)  MEP_PTR(PC  + MEP_PIECE_SIZE))
-# define MEP_HAS_PREV(PC)   (PC->prev > 0)
-# define MEP_HAS_NEXT(PC)   (PC->flags & MEP_FLAG_NEXT)
+# define MEP_HAVE_PREV(PC)  (PC->prev > 0)
+# define MEP_HAVE_NEXT(PC)  (PC->flags & MEP_FLAG_NEXT)
 # define MEP_IS_UNUSE(PC)   (PC->flags & MEP_FLAG_UNUSE)
 
 # define MEP_REMOVE_UNUSE(MP, PC) \
@@ -120,7 +119,7 @@ do { \
 # define MEP_MERGE(PC1, PC2) \
 do { \
     (PC1)->size += (PC2)->size + MEP_PIECE_SIZE; \
-    if (MEP_HAS_NEXT(PC2)) { \
+    if (MEP_HAVE_NEXT(PC2)) { \
         (PC1)->flags |= MEP_FLAG_NEXT; \
         MEP_NEXT_PIECE(PC2)->prev = (PC1)->size + MEP_PIECE_SIZE; \
     } else { \
@@ -170,14 +169,14 @@ MEP_INLINE
 void *mep_align_alloc(size_t size)
 {
     void *ptr;
-# if !defined(MEP_HAS_POSIX_ALIGN) && !defined(MEP_HAS_MEMALIGN)
+# if !defined(MEP_HAVE_POSIX_ALIGN) && !defined(MEP_HAVE_MEMALIGN)
     uintptr_t diff;
 # endif
 
-# ifdef MEP_HAS_POSIX_ALIGN
+# ifdef MEP_HAVE_POSIX_ALIGN
     if (posix_memalign(&ptr, MEP_ALIGN_SIZE, size))
         ptr = NULL;
-# elif defined(MEP_HAS_MEMALIGN)
+# elif defined(MEP_HAVE_MEMALIGN)
         ptr = memalign(MEP_ALIGN_SIZE, size);
 # else
     if ((ptr = malloc(size + MEP_ALIGN_SIZE))) {
@@ -191,7 +190,7 @@ void *mep_align_alloc(size_t size)
 MEP_INLINE
 void mep_align_free(void *ptr)
 {
-# if !defined(MEP_HAS_POSIX_ALIGN) && !defined(MEP_HAS_MEMALIGN)
+# if !defined(MEP_HAVE_POSIX_ALIGN) && !defined(MEP_HAVE_MEMALIGN)
     uintptr_t diff;
     diff = ((~(uintptr_t)ptr) & (MEP_ALIGN_SIZE - 1)) + 1;
     ptr  = MEP_PTR(ptr - diff);

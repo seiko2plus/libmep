@@ -63,7 +63,7 @@ void *mep_realloc(mep_t *mp, void *ptr, size_t size)
             nxpc->size  = diff - MEP_PIECE_SIZE;
             nxpc->prev  = a_size + MEP_PIECE_SIZE;
 
-            if (MEP_HAS_NEXT(pc)) {
+            if (MEP_HAVE_NEXT(pc)) {
                 /* going to merge with next if is unuse */
                 pc = MEP_NEXT_PIECE(nxpc);
 
@@ -83,7 +83,7 @@ void *mep_realloc(mep_t *mp, void *ptr, size_t size)
         return ptr;
     }
 
-    if (MEP_HAS_NEXT(pc)) {
+    if (MEP_HAVE_NEXT(pc)) {
         nxpc   = MEP_NEXT_PIECE(pc);
 
         if (MEP_IS_UNUSE(nxpc)) {
@@ -104,7 +104,7 @@ void *mep_realloc(mep_t *mp, void *ptr, size_t size)
                 */
                 pc->size += need;
 
-                if (MEP_HAS_NEXT(nxpc)) {
+                if (MEP_HAVE_NEXT(nxpc)) {
                     nxpc = MEP_NEXT_PIECE(pc);
                     nxpc->flags = MEP_FLAG_NEXT;
                     nxpc->size  = diff;
@@ -121,7 +121,7 @@ void *mep_realloc(mep_t *mp, void *ptr, size_t size)
             } else {
                 pc->size += nxpc->size + MEP_PIECE_SIZE; /* steal all next piece size */
 
-                if (MEP_HAS_NEXT(nxpc))
+                if (MEP_HAVE_NEXT(nxpc))
                     MEP_NEXT_PIECE(pc)->prev = pc->size + MEP_PIECE_SIZE;
                 else
                     pc->flags &= ~MEP_FLAG_NEXT;

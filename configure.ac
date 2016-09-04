@@ -53,8 +53,8 @@ AC_TYPE_UINT64_T
 #########
 # Check Functions
 ###################
-AC_CHECK_FUNC(posix_memalign, AC_DEFINE(MEP_HAS_POSIX_ALIGN))
-AC_CHECK_FUNC(memalign, AC_DEFINE(MEP_HAS_MEMALIGN))
+AC_CHECK_FUNC(posix_memalign, AC_DEFINE(MEP_HAVE_POSIX_ALIGN))
+AC_CHECK_FUNC(memalign, AC_DEFINE(MEP_HAVE_MEMALIGN))
 
 
 #########

@@ -46,7 +46,7 @@ typedef struct mep_s mep_t;
 typedef struct mep_stat_s {
     size_t lines,
            total,
-           free,
+           available,
            left,
            unuse_count,
            use_count;

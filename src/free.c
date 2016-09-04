@@ -34,7 +34,7 @@ void mep_free(mep_t *mp, void *ptr)
     pc  = MEP_PIECE(ptr);
     assert(!MEP_IS_UNUSE(pc));
 
-    if (MEP_HAS_PREV(pc)) {
+    if (MEP_HAVE_PREV(pc)) {
         tmp = MEP_PREV_PIECE(pc);
 
         if (MEP_IS_UNUSE(tmp)) {
@@ -47,7 +47,7 @@ void mep_free(mep_t *mp, void *ptr)
     MEP_ADD_UNUSE(mp, pc);
 
 next:
-    if (MEP_HAS_NEXT(pc)) {
+    if (MEP_HAVE_NEXT(pc)) {
         tmp = MEP_NEXT_PIECE(pc);
 
         if (MEP_IS_UNUSE(tmp)) {
