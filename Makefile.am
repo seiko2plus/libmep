@@ -42,6 +42,7 @@ libmep_la_SOURCES   = include/mep.h \
                       src/stdint-msvc2008.h \
                       src/utlist.h
 
+if MEP_TESTS
 
 TESTS               = mep_test1 mep_test2 mep_test3
 noinst_PROGRAMS     = mep_test1 mep_test2 mep_test3
@@ -60,3 +61,5 @@ mep_test3_SOURCES   = tests/test.h \
                       tests/test.c \
                       tests/test3.c
 mep_test3_LDADD     = libmep.la
+
+endif

@@ -98,14 +98,14 @@ AC_SUBST(CFLAGS)
 # Enable Tests
 ###################
 
+# ---------------------------------------------------------------------
+# Conditional variables
+# ---------------------------------------------------------------------
+
 AC_ARG_ENABLE(tests,
         AC_HELP_STRING( [--enable-tests], [Build test programs (default=no)]),, enable_tests=no)
 
-
-if test x$enable_tests = xyes; then
-    AC_DEFINE(MEP_TESTS)
-fi
-
+AM_CONDITIONAL(MEP_TESTS, test x$enable_tests = xyes)
 
 #########
 # Enable Valgrind
