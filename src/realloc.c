@@ -21,9 +21,16 @@
 
 # include "mep_p.h"
 
+# define left_return \
+do { \
+    assert((a_size - size) <= UINT8_MAX); \
+    pc->left = a_size - size; \
+    return ptr; \
+} while(0)
+
 void *mep_realloc(mep_t *mp, void *ptr, size_t size)
 {
-    mep_piece_t  *pc, *nxpc;
+    mep_piece_t  *pc, *nxpc, *nxnxpc;
     void         *nptr;
     mep_size_t    need, a_size;
     int64_t       diff;
@@ -47,13 +54,11 @@ void *mep_realloc(mep_t *mp, void *ptr, size_t size)
         a_size = MEP_ALIGN(size);
 
     pc  = MEP_PIECE(ptr);
-
     if (a_size == pc->size)
-        return ptr;
+        left_return;
 
     if (pc->size > a_size) {
         diff  = pc->size - a_size;
-        pc->left = a_size - size;
 
         if (diff >= MEP_SPLIT_SIZE) {
             pc->size  = a_size;
@@ -65,14 +70,14 @@ void *mep_realloc(mep_t *mp, void *ptr, size_t size)
 
             if (MEP_HAVE_NEXT(pc)) {
                 /* going to merge with next if is unuse */
-                pc = MEP_NEXT_PIECE(nxpc);
+                nxnxpc = MEP_NEXT_PIECE(nxpc);
 
-                if (MEP_IS_UNUSE(pc)) {
-                    MEP_REMOVE_UNUSE(mp, pc);
-                    MEP_MERGE(nxpc, pc);
+                if (MEP_IS_UNUSE(nxnxpc)) {
+                    MEP_REMOVE_UNUSE(mp, nxnxpc);
+                    MEP_MERGE(nxpc, nxnxpc);
                 } else {
-                    pc->prev    = nxpc->size + MEP_PIECE_SIZE;
-                    nxpc->flags = MEP_FLAG_NEXT;
+                    nxnxpc->prev = nxpc->size + MEP_PIECE_SIZE;
+                    nxpc->flags  = MEP_FLAG_NEXT;
                 }
             } else {
                 nxpc->flags = 0;
@@ -80,7 +85,8 @@ void *mep_realloc(mep_t *mp, void *ptr, size_t size)
             }
             MEP_ADD_UNUSE(mp, nxpc);
         }
-        return ptr;
+
+        left_return;
     }
 
     if (MEP_HAVE_NEXT(pc)) {
@@ -92,8 +98,6 @@ void *mep_realloc(mep_t *mp, void *ptr, size_t size)
 
             if (diff < 0 )
                 goto mmcp;
-
-            pc->left = a_size - size;
 
             MEP_REMOVE_UNUSE(mp, nxpc);
 
@@ -126,7 +130,8 @@ void *mep_realloc(mep_t *mp, void *ptr, size_t size)
                 else
                     pc->flags &= ~MEP_FLAG_NEXT;
             }
-            return ptr;
+
+            left_return;
         }
     }
 

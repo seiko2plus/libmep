@@ -56,10 +56,14 @@ extern "C" {
 # endif
 
 /*
+ * MEP_SPLIT_SIZE
  * Must be higher than MEP_PIECE_SIZE + MEP_UNUSE_SIZE
+ * Leave margin for align lose < MEP_ALIGN_SIZE
+ * mep_piece_s::left can rich the max, assert cause
 */
+
 # ifndef MEP_SPLIT_SIZE
-#   define MEP_SPLIT_SIZE (MEP_ALIGN_SIZE * 10)
+#   define MEP_SPLIT_SIZE (UINT8_MAX /2)
 # endif
 
 # if MEP_ALIGN_SIZE > 16

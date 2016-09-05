@@ -73,13 +73,12 @@ void *mep_alloc(mep_t *mp, size_t size)
 split:
     diff = pc->size - a_size;
     if (diff < MEP_SPLIT_SIZE)
-        return MEP_PIECE_PTR(pc);    
+        goto down;
     /*
      * we going to split piece
      * from the right
     */
     pc->size   = a_size; /* set a new size of first piece, so we can use MEP_NEXT_PIECE macro*/
-    pc->left   = a_size - size;
 
     npc = MEP_NEXT_PIECE(pc);
     npc->flags = MEP_FLAG_UNUSE;
@@ -105,6 +104,10 @@ split:
      * next one is the new splited piece
     */
     pc->flags = MEP_FLAG_NEXT;
+
+down:
+    assert((pc->size - size) <= UINT8_MAX);
+    pc->left = pc->size - size;
     return MEP_PIECE_PTR(pc);
 }
 

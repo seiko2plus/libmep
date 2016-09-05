@@ -82,7 +82,7 @@ fi
 # Enable Debug
 ###################
 AC_ARG_ENABLE(debug,
-        AC_HELP_STRING([--enable-debug], [Build debug library (default=no)]),, enable_debug=no)
+        AC_HELP_STRING([--enable-debug], [Build debug library (default=no)]),, enable_debug=yes)
 
 if test x$enable_debug = xyes; then
     GCJFLAGS="-g -O0"
@@ -103,7 +103,7 @@ AC_SUBST(CFLAGS)
 # ---------------------------------------------------------------------
 
 AC_ARG_ENABLE(tests,
-        AC_HELP_STRING( [--enable-tests], [Build test programs (default=no)]),, enable_tests=no)
+        AC_HELP_STRING( [--enable-tests], [Build test programs (default=no)]),, enable_tests=yes)
 
 AM_CONDITIONAL(MEP_TESTS, test x$enable_tests = xyes)
 
