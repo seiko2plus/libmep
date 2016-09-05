@@ -75,6 +75,6 @@ void test_main (TEST_POOL_T *mp)
     TEST_ASSERT(stat.unuse_count == 1);
     TEST_ASSERT(stat.available == TEST_LINE_SIZE);
     TEST_ASSERT(stat.total == TEST_LINE_SIZE);
-#   endif
     TEST_SUCS("[PASSED]");
+#   endif
 }

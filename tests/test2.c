@@ -21,7 +21,7 @@
 
 # include "test.h"
 
-# define ALLOC_NUM 1000
+# define ALLOC_NUM 10000
 
 void test_main (TEST_POOL_T *mp)
 {
@@ -60,11 +60,15 @@ void test_main (TEST_POOL_T *mp)
     TEST_FREE(mp, ptr_arr);
     TEST_FREE(mp, size_arr);
 
+
 #   ifdef TEST_CHECK_STATS
     TEST_PRINT("Stats");
     mep_stat(mp, &stat);
+    TEST_ASSERT(stat.lines == 1);
     TEST_ASSERT(stat.use_count   == 0);
-    TEST_ASSERT(stat.unuse_count == stat.lines);
-#   endif
+    TEST_ASSERT(stat.unuse_count == 1);
+    TEST_ASSERT(stat.available == TEST_LINE_SIZE);
+    TEST_ASSERT(stat.total == TEST_LINE_SIZE);
     TEST_SUCS("[PASSED]");
+#   endif
 }

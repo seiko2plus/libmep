@@ -107,18 +107,6 @@ AC_ARG_ENABLE(tests,
 
 AM_CONDITIONAL(MEP_TESTS, test x$enable_tests = xyes)
 
-#########
-# Enable Valgrind
-###################
-
-AC_ARG_ENABLE(valgrind,
-        AC_HELP_STRING( [--enable-valgrind], [Pass mep allocators to valgrind (default=no)]),, enable_valgrind=no)
-
-if test x$enable_valgrind = xyes; then
-    AC_DEFINE(MEP_VALGRIND)
-fi
-
-
 AM_MAINTAINER_MODE
 
 ##########
@@ -134,7 +122,6 @@ echo "Configuration:"
 echo ""
 echo "  LIBDIR:               $libdir"
 echo "  DEBUG:                $enable_debug"
-echo "  VALGRIND:             $enable_valgrind"
 echo "  TESTS:                $enable_tests"
 echo "  MAX SIZE:             $enable_maxsize"
 echo "  MEMORY ALIGNMENT:     $set_alignment"

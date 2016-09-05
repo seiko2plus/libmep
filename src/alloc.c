@@ -26,8 +26,7 @@ void *mep_alloc(mep_t *mp, size_t size)
     mep_line_t   *ln;
     mep_piece_t  *pc,  *npc;
     mep_unuse_t  *tmp, *unpc;
-    mep_size_t    diff, a_size;
-    size_t        line_size;
+    mep_size_t    diff, a_size, line_size;
 
     assert(mp != NULL && size <= MEP_MAX_ALLOC);
 
@@ -36,58 +35,20 @@ void *mep_alloc(mep_t *mp, size_t size)
     else
         a_size = MEP_ALIGN(size);
 
-    /* looking inside unsed pieces */
+    /* looking inside unse pieces */
     DL_FOREACH_SAFE(mp->unuses, unpc, tmp) {
-        pc = MEP_PIECE(unpc);
+        pc = MEP_PIECE_UNUSE(unpc);
         /* do we have the size? */
-        if (a_size > pc->size)
-            continue;
-
-        /* remove from unuse list since we got size what we want */        
-        DL_DELETE(mp->unuses, unpc);
-
-split:
-        diff = pc->size - a_size;
-        if (diff < MEP_SPLIT_SIZE) {
+        if (pc->size >= a_size ) {
+            /* remove from unuse list since we got size what we want */
             pc->flags &= ~MEP_FLAG_UNUSE;
-            return MEP_PIECE_PTR(pc);
-        }        
-        /*
-         * we going to split piece
-         * from the right
-        */
-        pc->size   = a_size; /* set a new size of first piece, so we can use MEP_NEXT_PIECE macro*/
-        pc->left   = a_size - size;
-
-        npc = MEP_NEXT_PIECE(pc);
-        npc->flags = MEP_FLAG_UNUSE;
-        npc->size  = diff - MEP_PIECE_SIZE;
-        npc->prev  = a_size  + MEP_PIECE_SIZE;
-
-        /*
-         * check if the first piece has next piece so we pass it
-         * and fix prev size
-        */
-        if (MEP_HAVE_NEXT(pc)) {
-             npc->flags |= MEP_FLAG_NEXT;
-             MEP_NEXT_PIECE(npc)->prev = diff;
+            DL_DELETE(mp->unuses, unpc);
+            goto split;
         }
-        /*
-         * add our new piece to the new unuse list
-        */
-        tmp = MEP_UNUSE(npc);
-        DL_APPEND(mp->unuses, tmp);
-        /*
-         * return piece ptr
-         * and pass only next flag
-         * next one is the new splited piece
-        */
-        pc->flags = MEP_FLAG_NEXT;
-        return MEP_PIECE_PTR(pc);
     }
+
     /*
-     * since we reach here thats mean we don't find enough unsed spaces
-     * that's mean we gonna allocate a new line
+     * we can't find specfic size in unuse list so we create a new line
     */
     line_size = mp->lines->size; /* first line size */
     if (line_size < a_size)
@@ -98,17 +59,53 @@ split:
     else
         ln = mep_align_alloc(line_size + MEP_LINE_SIZE + MEP_PIECE_SIZE);
 
-    if (ln) {
-        ln->size = line_size;
-        DL_APPEND(mp->lines, ln);
+    if (ln == NULL)
+        return NULL;
 
-        pc = MEP_PIECE_LN(ln);
-        pc->flags = MEP_FLAG_UNUSE;
-        pc->size  = line_size;
-        pc->prev  = 0;
-        goto split;
+    ln->size = line_size;
+    DL_APPEND(mp->lines, ln);
+
+    pc = MEP_PIECE_LN(ln);
+    pc->size  = line_size;
+    pc->flags = 0;
+    pc->prev  = 0;
+
+split:
+    diff = pc->size - a_size;
+    if (diff < MEP_SPLIT_SIZE)
+        return MEP_PIECE_PTR(pc);    
+    /*
+     * we going to split piece
+     * from the right
+    */
+    pc->size   = a_size; /* set a new size of first piece, so we can use MEP_NEXT_PIECE macro*/
+    pc->left   = a_size - size;
+
+    npc = MEP_NEXT_PIECE(pc);
+    npc->flags = MEP_FLAG_UNUSE;
+    npc->size  = diff - MEP_PIECE_SIZE;
+    npc->prev  = a_size  + MEP_PIECE_SIZE;
+
+    /*
+     * check if the first piece has next piece so we pass it
+     * and fix prev size
+    */
+    if (MEP_HAVE_NEXT(pc)) {
+         npc->flags |= MEP_FLAG_NEXT;
+         MEP_NEXT_PIECE(npc)->prev = diff;
     }
-    return NULL;
+    /*
+     * add our new piece to the new unuse list
+    */
+    tmp = MEP_UNUSE(npc);
+    DL_APPEND(mp->unuses, tmp);
+    /*
+     * return piece ptr
+     * and pass only next flag
+     * next one is the new splited piece
+    */
+    pc->flags = MEP_FLAG_NEXT;
+    return MEP_PIECE_PTR(pc);
 }
 
 void *mep_calloc(mep_t *mp, size_t count, size_t size)

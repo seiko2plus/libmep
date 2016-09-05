@@ -37,8 +37,7 @@ mep_t *mep_new(mep_t *parent, size_t line_size)
         mp->parent = parent;
         mep_init(mp, line_size);
     }
-
-   return mp;
+    return mp;
 }
 
 void mep_reset(mep_t *mp)
@@ -56,7 +55,6 @@ void mep_reset(mep_t *mp)
 
     mep_init(mp, mp->lines->size);
 }
-
 
 void mep_destroy(mep_t *mp)
 {
@@ -134,20 +132,18 @@ void mep_init(mep_t *mp, size_t line_size)
 {
     mep_line_t   *ln;
     mep_piece_t  *pc;
-    mep_unuse_t *unpc;
 
-    mp->lines    = NULL;
-    mp->unuses  = NULL;
+    mp->lines  = NULL;
+    mp->unuses = NULL;
 
-    ln = MEP_PTR(mp + MEP_SIZE);
+    ln = (mep_line_t*) MEP_PTR(mp + MEP_SIZE);
     ln->size = line_size;
     DL_APPEND(mp->lines, ln);
 
-    pc            = MEP_PIECE_LN(ln);
-    pc->size      = line_size;
-    pc->prev      = 0;
-    pc->flags     = MEP_FLAG_UNUSE;
+    pc        = MEP_PIECE_LN(ln);
+    pc->size  = line_size;
+    pc->prev  = 0;
+    pc->flags = MEP_FLAG_UNUSE;
 
-    unpc = MEP_UNUSE(pc);
-    DL_APPEND(mp->unuses, unpc);
+    MEP_ADD_UNUSE(mp, pc);
 }

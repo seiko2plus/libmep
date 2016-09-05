@@ -55,11 +55,11 @@ do { \
 # define TEST_REALLOC(POOL, PTR, SIZE)  mep_realloc(POOL, PTR, SIZE)
 # define TEST_FREE(POOL, PTR)           mep_free(POOL, PTR)
 
-# define TEST_POOL_T      mep_t
-# define TEST_LINE_SIZE   (1024 * 1024 * 100)
-# define TEST_CHECK_STATS 1
-# define TEST_SEED_EVERY  10
-# define TEST_MAX_RAND    1024 * 1024
+# define TEST_POOL_T       mep_t
+# define TEST_LINE_SIZE    (1024 * 1024 * 10)
+# define TEST_CHECK_STATS  1
+# define TEST_SEED_EVERY   10
+# define TEST_MAX_RAND     (1024 * 100)
 
 typedef struct {
     TEST_POOL_T *mp;

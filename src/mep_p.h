@@ -93,16 +93,21 @@ extern "C" {
 # define MEP_SIZE           MEP_ALIGN_OF(mep_t)
 # define MEP_UNUSE_SIZE     (sizeof(mep_unuse_t))
 
-# define MEP_PTR(X)         ((void*)((uintptr_t) X))
+# define MEP_PTR(X)         ((uintptr_t) X)
+
 # define MEP_PIECE(PTR)     ((mep_piece_t*)  MEP_PTR(PTR - MEP_PIECE_SIZE))
-# define MEP_PIECE_PTR(PC)                  (MEP_PTR(PC  + MEP_PIECE_SIZE))
+# define MEP_PIECE_PTR(PC)  ((void*)         MEP_PTR(PC  + MEP_PIECE_SIZE))
 # define MEP_PIECE_LN(LN)   ((mep_piece_t*)  MEP_PTR(LN  + MEP_LINE_SIZE))
-# define MEP_NEXT_PIECE(PC) ((mep_piece_t*)  MEP_PTR(PC  + (PC->size + MEP_PIECE_SIZE)))
-# define MEP_PREV_PIECE(PC) ((mep_piece_t*)  MEP_PTR(PC  - PC->prev))
-# define MEP_UNUSE(PC)      ((mep_unuse_t*)  MEP_PTR(PC  + MEP_PIECE_SIZE))
+# define MEP_PIECE_UNUSE(U) ((mep_piece_t*)  MEP_PTR(U   - MEP_UNUSE_SIZE))
+
 # define MEP_HAVE_PREV(PC)  (PC->prev > 0)
 # define MEP_HAVE_NEXT(PC)  (PC->flags & MEP_FLAG_NEXT)
+# define MEP_NEXT_PIECE(PC) ((mep_piece_t*)  MEP_PTR(PC  + (PC->size + MEP_PIECE_SIZE)))
+# define MEP_PREV_PIECE(PC) ((mep_piece_t*)  MEP_PTR(PC  - PC->prev))
+
 # define MEP_IS_UNUSE(PC)   (PC->flags & MEP_FLAG_UNUSE)
+# define MEP_UNUSE(PC)      ((mep_unuse_t*)  MEP_PTR(PC  + MEP_PIECE_SIZE))
+
 
 # define MEP_REMOVE_UNUSE(MP, PC) \
 do { \
@@ -181,7 +186,7 @@ void *mep_align_alloc(size_t size)
 # else
     if ((ptr = malloc(size + MEP_ALIGN_SIZE))) {
         diff = ((~(uintptr_t)ptr) & (MEP_ALIGN_SIZE - 1)) + 1;
-        ptr  = MEP_PTR(ptr + diff);
+        ptr  = (void*) MEP_PTR(ptr + diff);
     }
 # endif
     return ptr;
@@ -193,7 +198,7 @@ void mep_align_free(void *ptr)
 # if !defined(MEP_HAVE_POSIX_ALIGN) && !defined(MEP_HAVE_MEMALIGN)
     uintptr_t diff;
     diff = ((~(uintptr_t)ptr) & (MEP_ALIGN_SIZE - 1)) + 1;
-    ptr  = MEP_PTR(ptr - diff);
+    ptr  = (void*) MEP_PTR(ptr - diff);
 # endif
     free(ptr);
 }

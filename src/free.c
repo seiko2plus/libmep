@@ -29,6 +29,7 @@
 void mep_free(mep_t *mp, void *ptr)
 {
     mep_piece_t  *pc, *tmp;
+    mep_line_t   *ln;
     assert(mp != NULL && ptr != NULL);
 
     pc  = MEP_PIECE(ptr);
@@ -53,6 +54,22 @@ next:
         if (MEP_IS_UNUSE(tmp)) {
             MEP_REMOVE_UNUSE(mp, tmp);
             MEP_MERGE(pc, tmp);
+        }
+    }
+
+    /* Shrink memory pool and free unused lines */
+    if (!MEP_HAVE_PREV(pc) && !MEP_HAVE_NEXT(pc)) {
+        ln = (mep_line_t*) MEP_PTR(pc  - MEP_LINE_SIZE);
+
+        /* is not the first line */
+        if (ln != (mep_line_t*) MEP_PTR(mp + MEP_SIZE)) {
+            MEP_REMOVE_UNUSE(mp, pc);
+            DL_DELETE(mp->lines, ln);
+
+            if (mp->parent)
+                mep_free(mp->parent, ln);
+            else
+                mep_align_free(ln);
         }
     }
 }
