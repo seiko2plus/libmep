@@ -29,9 +29,9 @@ mep_t *mep_new(mep_t *parent, size_t line_size)
     line_size = MEP_ALIGN(line_size);
 
     if (parent)
-        mp = mep_alloc(parent, line_size + MEP_SIZE + MEP_LINE_SIZE + MEP_PIECE_SIZE);
+        mp = mep_alloc(parent, line_size + MEP_SIZE + MEP_LINE_SIZE + MEP_CHUNK_SIZE);
     else
-        mp = mep_align_alloc(line_size + MEP_SIZE + MEP_LINE_SIZE + MEP_PIECE_SIZE);
+        mp = mep_align_alloc(line_size + MEP_SIZE + MEP_LINE_SIZE + MEP_CHUNK_SIZE);
 
     if (mp) {
         mp->parent = parent;
@@ -75,7 +75,7 @@ void mep_destroy(mep_t *mp)
 void mep_stat(mep_t *mp, mep_stat_t *stat)
 {
     mep_line_t   *ln;
-    mep_piece_t  *pc;
+    mep_chunk_t  *ck;
     assert(mp != NULL && stat != NULL);
 
     memset(stat, 0, sizeof(mep_stat_t));
@@ -84,21 +84,21 @@ void mep_stat(mep_t *mp, mep_stat_t *stat)
         stat->total += ln->size;
         stat->lines++;
 
-        pc = MEP_PIECE_LN(ln);
+        ck = MEP_CHUNK_LN(ln);
 
         for(;;) {
-            if (pc->flags & MEP_FLAG_UNUSE) {
+            if (ck->flags & MEP_FLAG_UNUSE) {
                 stat->unuse_count++;
-                stat->available += pc->size;
+                stat->available += ck->size;
             } else {
                 stat->use_count++;
-                stat->left += pc->left;
+                stat->left += ck->left;
             }
 
-            if (!(pc->flags & MEP_FLAG_NEXT))
+            if (!(ck->flags & MEP_FLAG_NEXT))
                 break;
 
-            pc = MEP_NEXT_PIECE(pc);
+            ck = MEP_NEXT_CHUNK(ck);
         }
     }
 }
@@ -106,11 +106,11 @@ void mep_stat(mep_t *mp, mep_stat_t *stat)
 
 size_t mep_size_of(void *ptr)
 {
-    mep_piece_t *pc;
+    mep_chunk_t *ck;
     assert(ptr != NULL);
 
-    pc  = MEP_PIECE(ptr);
-    return pc->size;
+    ck  = MEP_CHUNK(ptr);
+    return ck->size;
 }
 
 size_t mep_max_line(void)
@@ -131,7 +131,7 @@ size_t mep_align_size(void)
 void mep_init(mep_t *mp, size_t line_size)
 {
     mep_line_t   *ln;
-    mep_piece_t  *pc;
+    mep_chunk_t  *ck;
 
     mp->lines  = NULL;
     mp->unuses = NULL;
@@ -140,10 +140,10 @@ void mep_init(mep_t *mp, size_t line_size)
     ln->size = line_size;
     DL_APPEND(mp->lines, ln);
 
-    pc        = MEP_PIECE_LN(ln);
-    pc->size  = line_size;
-    pc->prev  = 0;
-    pc->flags = MEP_FLAG_UNUSE;
+    ck        = MEP_CHUNK_LN(ln);
+    ck->size  = line_size;
+    ck->prev  = 0;
+    ck->flags = MEP_FLAG_UNUSE;
 
-    MEP_ADD_UNUSE(mp, pc);
+    MEP_ADD_UNUSE(mp, ck);
 }

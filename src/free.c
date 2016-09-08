@@ -28,42 +28,42 @@
 */
 void mep_free(mep_t *mp, void *ptr)
 {
-    mep_piece_t  *pc, *tmp;
+    mep_chunk_t  *chunk, *tmp;
     mep_line_t   *ln;
     assert(mp != NULL && ptr != NULL);
 
-    pc  = MEP_PIECE(ptr);
-    assert(!MEP_IS_UNUSE(pc));
+    chunk  = MEP_CHUNK(ptr);
+    assert(!MEP_IS_UNUSE(chunk));
 
-    if (MEP_HAVE_PREV(pc)) {
-        tmp = MEP_PREV_PIECE(pc);
+    if (MEP_HAVE_PREV(chunk)) {
+        tmp = MEP_PREV_CHUNK(chunk);
 
         if (MEP_IS_UNUSE(tmp)) {
-            MEP_MERGE(tmp, pc);
-            pc = tmp;
+            MEP_MERGE(tmp, chunk);
+            chunk = tmp;
             goto next; /* escape adding to unuse since tmp already there */
         }
     }
 
-    MEP_ADD_UNUSE(mp, pc);
+    MEP_ADD_UNUSE(mp, chunk);
 
 next:
-    if (MEP_HAVE_NEXT(pc)) {
-        tmp = MEP_NEXT_PIECE(pc);
+    if (MEP_HAVE_NEXT(chunk)) {
+        tmp = MEP_NEXT_CHUNK(chunk);
 
         if (MEP_IS_UNUSE(tmp)) {
             MEP_REMOVE_UNUSE(mp, tmp);
-            MEP_MERGE(pc, tmp);
+            MEP_MERGE(chunk, tmp);
         }
     }
 
     /* Shrink memory pool and free unused lines */
-    if (!MEP_HAVE_PREV(pc) && !MEP_HAVE_NEXT(pc)) {
-        ln = (mep_line_t*) MEP_PTR(pc  - MEP_LINE_SIZE);
+    if (!MEP_HAVE_PREV(chunk) && !MEP_HAVE_NEXT(chunk)) {
+        ln = (mep_line_t*) MEP_PTR(chunk  - MEP_LINE_SIZE);
 
         /* is not the first line */
         if (ln != (mep_line_t*) MEP_PTR(mp + MEP_SIZE)) {
-            MEP_REMOVE_UNUSE(mp, pc);
+            MEP_REMOVE_UNUSE(mp, chunk);
             DL_DELETE(mp->lines, ln);
 
             if (mp->parent)
