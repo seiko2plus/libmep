@@ -24,13 +24,26 @@
 
 char *mep_strdup(mep_t *mp, const char *s)
 {
-    char    *dst;
-    size_t   len = strlen(s) + 1;
+    char  *dst;
+    size_t len = strlen(s) + 1;
 
     if (NULL == (dst = mep_alloc(mp, len)))
         return NULL;
 
-    memcpy(dst, s, len);
-    return dst;
+    return memcpy(dst, s, len);
 }
 
+char *mep_strndup(mep_t *mp, const char *s, size_t n)
+{
+    char  *dst;
+    size_t len = strlen(s);
+
+    if (n < len)
+        len = n;
+
+    if (NULL == (dst = mep_alloc(mp, len + 1)))
+        return NULL;
+
+    dst[len] = '\0';
+    return memcpy(dst, s, len);
+}

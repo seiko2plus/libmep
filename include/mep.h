@@ -69,6 +69,7 @@ MEP_EXTERN size_t mep_max_line   (void);
 MEP_EXTERN size_t mep_align_size (void);
 
 MEP_EXTERN char  *mep_strdup     (mep_t *mp, const char *s);
+MEP_EXTERN char  *mep_strndup    (mep_t *mp, const char *s, size_t n);
 
 
 # if defined __cplusplus
