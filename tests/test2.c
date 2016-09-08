@@ -21,7 +21,7 @@
 
 # include "test.h"
 
-# define ALLOC_NUM 10000
+# define ALLOC_NUM 1000
 
 void test_main (TEST_POOL_T *mp)
 {

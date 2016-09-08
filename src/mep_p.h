@@ -57,9 +57,9 @@ extern "C" {
 
 /*
  * MEP_SPLIT_SIZE
- * Must be higher than MEP_PIECE_SIZE + MEP_UNUSE_SIZE
+ * Must be higher than MEP_CHUNK_SIZE + MEP_UNUSE_SIZE
  * Leave margin for align lose < MEP_ALIGN_SIZE
- * mep_piece_s::left can rich the max, assert cause
+ * mep_chunk_s::left can rich the max, assert cause
 */
 
 # ifndef MEP_SPLIT_SIZE
@@ -86,53 +86,53 @@ extern "C" {
 # define MEP_MAX_LINE_SIZE  (MEP_ALIGN(MEP_SIZE_MAX - MEP_ALIGN_SIZE) - (MEP_SIZE + MEP_LINE_SIZE))
 
 # ifndef MEP_MAX_ALLOC
-#   define MEP_MAX_ALLOC    (MEP_MAX_LINE_SIZE - MEP_PIECE_SIZE)
+#   define MEP_MAX_ALLOC    (MEP_MAX_LINE_SIZE - MEP_CHUNK_SIZE)
 # endif
 
 # define MEP_ALIGN(X)       (((X) + MEP_ALIGN_SIZE - 1) & ~(MEP_ALIGN_SIZE - 1))
 # define MEP_ALIGN_OF(X)    MEP_ALIGN(sizeof(X))
 
-# define MEP_PIECE_SIZE     MEP_ALIGN_OF(mep_piece_t)
+# define MEP_CHUNK_SIZE     MEP_ALIGN_OF(mep_chunk_t)
 # define MEP_LINE_SIZE      MEP_ALIGN_OF(mep_line_t)
 # define MEP_SIZE           MEP_ALIGN_OF(mep_t)
 # define MEP_UNUSE_SIZE     (sizeof(mep_unuse_t))
 
 # define MEP_PTR(X)         ((uintptr_t) X)
 
-# define MEP_PIECE(PTR)     ((mep_piece_t*)  MEP_PTR(PTR - MEP_PIECE_SIZE))
-# define MEP_PIECE_PTR(PC)  ((void*)         MEP_PTR(PC  + MEP_PIECE_SIZE))
-# define MEP_PIECE_LN(LN)   ((mep_piece_t*)  MEP_PTR(LN  + MEP_LINE_SIZE))
-# define MEP_PIECE_UNUSE(U) ((mep_piece_t*)  MEP_PTR(U   - MEP_UNUSE_SIZE))
+# define MEP_CHUNK(PTR)     ((mep_chunk_t*)  MEP_PTR(PTR - MEP_CHUNK_SIZE))
+# define MEP_CHUNK_PTR(CK)  ((void*)         MEP_PTR(CK  + MEP_CHUNK_SIZE))
+# define MEP_CHUNK_LN(LN)   ((mep_chunk_t*)  MEP_PTR(LN  + MEP_LINE_SIZE))
+# define MEP_CHUNK_UNUSE(U) ((mep_chunk_t*)  MEP_PTR(U   - MEP_UNUSE_SIZE))
 
-# define MEP_HAVE_PREV(PC)  (PC->prev > 0)
-# define MEP_HAVE_NEXT(PC)  (PC->flags & MEP_FLAG_NEXT)
-# define MEP_NEXT_PIECE(PC) ((mep_piece_t*)  MEP_PTR(PC  + (PC->size + MEP_PIECE_SIZE)))
-# define MEP_PREV_PIECE(PC) ((mep_piece_t*)  MEP_PTR(PC  - PC->prev))
+# define MEP_HAVE_PREV(CK)  (CK->prev > 0)
+# define MEP_HAVE_NEXT(CK)  (CK->flags & MEP_FLAG_NEXT)
+# define MEP_NEXT_CHUNK(CK) ((mep_chunk_t*)  MEP_PTR(CK  + (CK->size + MEP_CHUNK_SIZE)))
+# define MEP_PREV_CHUNK(CK) ((mep_chunk_t*)  MEP_PTR(CK  - CK->prev))
 
-# define MEP_IS_UNUSE(PC)   (PC->flags & MEP_FLAG_UNUSE)
-# define MEP_UNUSE(PC)      ((mep_unuse_t*)  MEP_PTR(PC  + MEP_PIECE_SIZE))
+# define MEP_IS_UNUSE(CK)   (CK->flags & MEP_FLAG_UNUSE)
+# define MEP_UNUSE(CK)      ((mep_unuse_t*)  MEP_PTR(CK  + MEP_CHUNK_SIZE))
 
 
-# define MEP_REMOVE_UNUSE(MP, PC) \
+# define MEP_REMOVE_UNUSE(MP, CK) \
 do { \
-    (PC)->flags &= ~MEP_FLAG_UNUSE; \
-    DL_DELETE((MP)->unuses, MEP_UNUSE(PC)); \
+    (CK)->flags &= ~MEP_FLAG_UNUSE; \
+    DL_DELETE((MP)->unuses, MEP_UNUSE(CK)); \
 } while(0)  \
 
-# define MEP_ADD_UNUSE(MP, PC) \
+# define MEP_ADD_UNUSE(MP, CK) \
 do { \
-    (PC)->flags |= MEP_FLAG_UNUSE; \
-    DL_APPEND((MP)->unuses, MEP_UNUSE(PC)); \
+    (CK)->flags |= MEP_FLAG_UNUSE; \
+    DL_APPEND((MP)->unuses, MEP_UNUSE(CK)); \
 } while(0)
 
-# define MEP_MERGE(PC1, PC2) \
+# define MEP_MERGE(CK1, CK2) \
 do { \
-    (PC1)->size += (PC2)->size + MEP_PIECE_SIZE; \
-    if (MEP_HAVE_NEXT(PC2)) { \
-        (PC1)->flags |= MEP_FLAG_NEXT; \
-        MEP_NEXT_PIECE(PC2)->prev = (PC1)->size + MEP_PIECE_SIZE; \
+    (CK1)->size += (CK2)->size + MEP_CHUNK_SIZE; \
+    if (MEP_HAVE_NEXT(CK2)) { \
+        (CK1)->flags |= MEP_FLAG_NEXT; \
+        MEP_NEXT_CHUNK(CK2)->prev = (CK1)->size + MEP_CHUNK_SIZE; \
     } else { \
-        (PC1)->flags &= ~MEP_FLAG_NEXT; \
+        (CK1)->flags &= ~MEP_FLAG_NEXT; \
     } \
 } while(0)
 
@@ -143,13 +143,13 @@ typedef struct mep_unuse_s
                        *prev;
 } mep_unuse_t;
 
-typedef struct mep_piece_s
+typedef struct mep_chunk_s
 {
     mep_size_t size,
                prev;
     uint8_t    flags,
                left;
-} mep_piece_t;
+} mep_chunk_t;
 
 typedef struct mep_line_s
 {

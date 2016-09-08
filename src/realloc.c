@@ -24,13 +24,13 @@
 # define left_return \
 do { \
     assert((a_size - size) <= UINT8_MAX); \
-    pc->left = a_size - size; \
+    chunk->left = a_size - size; \
     return ptr; \
 } while(0)
 
 void *mep_realloc(mep_t *mp, void *ptr, size_t size)
 {
-    mep_piece_t  *pc, *nxpc, *nxnxpc;
+    mep_chunk_t  *chunk, *nxchunk, *nxnxchunk;
     void         *nptr;
     mep_size_t    need, a_size;
     int64_t       diff;
@@ -53,82 +53,82 @@ void *mep_realloc(mep_t *mp, void *ptr, size_t size)
     else
         a_size = MEP_ALIGN(size);
 
-    pc  = MEP_PIECE(ptr);
-    if (a_size == pc->size)
+    chunk  = MEP_CHUNK(ptr);
+    if (a_size == chunk->size)
         left_return;
 
-    if (pc->size > a_size) {
-        diff  = pc->size - a_size;
+    if (chunk->size > a_size) {
+        diff  = chunk->size - a_size;
 
         if (diff >= MEP_SPLIT_SIZE) {
-            pc->size  = a_size;
+            chunk->size  = a_size;
 
-            /* new piece */
-            nxpc = MEP_NEXT_PIECE(pc);
-            nxpc->size  = diff - MEP_PIECE_SIZE;
-            nxpc->prev  = a_size + MEP_PIECE_SIZE;
+            /* new chunk */
+            nxchunk = MEP_NEXT_CHUNK(chunk);
+            nxchunk->size  = diff - MEP_CHUNK_SIZE;
+            nxchunk->prev  = a_size + MEP_CHUNK_SIZE;
 
-            if (MEP_HAVE_NEXT(pc)) {
+            if (MEP_HAVE_NEXT(chunk)) {
                 /* going to merge with next if is unuse */
-                nxnxpc = MEP_NEXT_PIECE(nxpc);
+                nxnxchunk = MEP_NEXT_CHUNK(nxchunk);
 
-                if (MEP_IS_UNUSE(nxnxpc)) {
-                    MEP_REMOVE_UNUSE(mp, nxnxpc);
-                    MEP_MERGE(nxpc, nxnxpc);
+                if (MEP_IS_UNUSE(nxnxchunk)) {
+                    MEP_REMOVE_UNUSE(mp, nxnxchunk);
+                    MEP_MERGE(nxchunk, nxnxchunk);
                 } else {
-                    nxnxpc->prev = nxpc->size + MEP_PIECE_SIZE;
-                    nxpc->flags  = MEP_FLAG_NEXT;
+                    nxnxchunk->prev = nxchunk->size + MEP_CHUNK_SIZE;
+                    nxchunk->flags  = MEP_FLAG_NEXT;
                 }
             } else {
-                nxpc->flags = 0;
-                pc->flags  |= MEP_FLAG_NEXT;
+                nxchunk->flags = 0;
+                chunk->flags  |= MEP_FLAG_NEXT;
             }
-            MEP_ADD_UNUSE(mp, nxpc);
+            MEP_ADD_UNUSE(mp, nxchunk);
         }
 
         left_return;
     }
 
-    if (MEP_HAVE_NEXT(pc)) {
-        nxpc   = MEP_NEXT_PIECE(pc);
+    if (MEP_HAVE_NEXT(chunk)) {
+        nxchunk   = MEP_NEXT_CHUNK(chunk);
 
-        if (MEP_IS_UNUSE(nxpc)) {
-            need  = a_size - pc->size;
-            diff  = nxpc->size  - need;
+        if (MEP_IS_UNUSE(nxchunk)) {
+            need  = a_size - chunk->size;
+            diff  = nxchunk->size  - need;
 
             if (diff < 0 )
                 goto mmcp;
 
-            MEP_REMOVE_UNUSE(mp, nxpc);
+            MEP_REMOVE_UNUSE(mp, nxchunk);
 
             if (diff >= MEP_SPLIT_SIZE) {
                 /*
-                 * steal what we need from next piece and set new size
-                 * so MEP_NEXT_PIECE will bring to us a new piece
+                 * steal what we need from next chunk and set new size
+                 * so MEP_NEXT_CHUNK will bring to us a new chunk
                 */
-                pc->size += need;
+                chunk->size += need;
 
-                if (MEP_HAVE_NEXT(nxpc)) {
-                    nxpc = MEP_NEXT_PIECE(pc);
-                    nxpc->flags = MEP_FLAG_NEXT;
-                    nxpc->size  = diff;
-                    MEP_NEXT_PIECE(nxpc)->prev = diff + MEP_PIECE_SIZE;
+                if (MEP_HAVE_NEXT(nxchunk)) {
+                    nxchunk = MEP_NEXT_CHUNK(chunk);
+                    nxchunk->flags = MEP_FLAG_NEXT;
+                    nxchunk->size  = diff;
+                    MEP_NEXT_CHUNK(nxchunk)->prev = diff + MEP_CHUNK_SIZE;
                 } else {
-                    nxpc = MEP_NEXT_PIECE(pc);
-                    nxpc->flags = 0;
-                    nxpc->size  = diff;  /* diff already without MEP_PIECE_SIZE */
+                    nxchunk = MEP_NEXT_CHUNK(chunk);
+                    nxchunk->flags = 0;
+                    nxchunk->size  = diff;  /* diff already without MEP_CHUNK_SIZE */
                 }
 
-                nxpc->prev = pc->size + MEP_PIECE_SIZE;
-                MEP_ADD_UNUSE(mp, nxpc);
+                nxchunk->prev = chunk->size + MEP_CHUNK_SIZE;
+                MEP_ADD_UNUSE(mp, nxchunk);
 
             } else {
-                pc->size += nxpc->size + MEP_PIECE_SIZE; /* steal all next piece size */
+                chunk->size += nxchunk->size + MEP_CHUNK_SIZE; /* steal all next chunk size */
 
-                if (MEP_HAVE_NEXT(nxpc))
-                    MEP_NEXT_PIECE(pc)->prev = pc->size + MEP_PIECE_SIZE;
+                if (MEP_HAVE_NEXT(nxchunk))
+                    MEP_NEXT_CHUNK(chunk)->prev = chunk->size + MEP_CHUNK_SIZE;
                 else
-                    pc->flags &= ~MEP_FLAG_NEXT;
+                    chunk->flags &= ~MEP_FLAG_NEXT;
             }
 
             left_return;
@@ -138,7 +138,7 @@ void *mep_realloc(mep_t *mp, void *ptr, size_t size)
 mmcp:
     nptr = mep_alloc(mp, size);
     if (nptr) {
-        memcpy(nptr, ptr, pc->size - pc->left); /* todo we need memcpy depend on memory alignment to gunrentee speed */
+        memcpy(nptr, ptr, chunk->size - chunk->left); /* todo we need memcpy depend on memory alignment to gunrentee speed */
         mep_free(mp, ptr);
     }
     return nptr;

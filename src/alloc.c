@@ -24,8 +24,8 @@
 void *mep_alloc(mep_t *mp, size_t size)
 {
     mep_line_t   *ln;
-    mep_piece_t  *pc,  *npc;
-    mep_unuse_t  *tmp, *unpc;
+    mep_chunk_t  *ck,  *nck;
+    mep_unuse_t  *tmp, *unck;
     mep_size_t    diff, a_size, line_size;
 
     assert(mp != NULL && size <= MEP_MAX_ALLOC);
@@ -35,14 +35,14 @@ void *mep_alloc(mep_t *mp, size_t size)
     else
         a_size = MEP_ALIGN(size);
 
-    /* looking inside unse pieces */
-    DL_FOREACH_SAFE(mp->unuses, unpc, tmp) {
-        pc = MEP_PIECE_UNUSE(unpc);
+    /* looking inside unse chunks */
+    DL_FOREACH_SAFE(mp->unuses, unck, tmp) {
+        ck = MEP_CHUNK_UNUSE(unck);
         /* do we have the size? */
-        if (pc->size >= a_size ) {
+        if (ck->size >= a_size ) {
             /* remove from unuse list since we got size what we want */
-            pc->flags &= ~MEP_FLAG_UNUSE;
-            DL_DELETE(mp->unuses, unpc);
+            ck->flags &= ~MEP_FLAG_UNUSE;
+            DL_DELETE(mp->unuses, unck);
             goto split;
         }
     }
@@ -55,9 +55,9 @@ void *mep_alloc(mep_t *mp, size_t size)
         line_size = a_size;
 
     if (mp->parent)
-        ln = mep_alloc(mp->parent, line_size + MEP_LINE_SIZE + MEP_PIECE_SIZE);
+        ln = mep_alloc(mp->parent, line_size + MEP_LINE_SIZE + MEP_CHUNK_SIZE);
     else
-        ln = mep_align_alloc(line_size + MEP_LINE_SIZE + MEP_PIECE_SIZE);
+        ln = mep_align_alloc(line_size + MEP_LINE_SIZE + MEP_CHUNK_SIZE);
 
     if (ln == NULL)
         return NULL;
@@ -65,50 +65,50 @@ void *mep_alloc(mep_t *mp, size_t size)
     ln->size = line_size;
     DL_APPEND(mp->lines, ln);
 
-    pc = MEP_PIECE_LN(ln);
-    pc->size  = line_size;
-    pc->flags = 0;
-    pc->prev  = 0;
+    ck = MEP_CHUNK_LN(ln);
+    ck->size  = line_size;
+    ck->flags = 0;
+    ck->prev  = 0;
 
 split:
-    diff = pc->size - a_size;
+    diff = ck->size - a_size;
     if (diff < MEP_SPLIT_SIZE)
         goto down;
     /*
-     * we going to split piece
+     * we going to split chunk
      * from the right
     */
-    pc->size   = a_size; /* set a new size of first piece, so we can use MEP_NEXT_PIECE macro*/
+    ck->size   = a_size; /* set a new size of first chunk, so we can use MEP_NEXT_CHUNK macro*/
 
-    npc = MEP_NEXT_PIECE(pc);
-    npc->flags = MEP_FLAG_UNUSE;
-    npc->size  = diff - MEP_PIECE_SIZE;
-    npc->prev  = a_size  + MEP_PIECE_SIZE;
+    nck = MEP_NEXT_CHUNK(ck);
+    nck->flags = MEP_FLAG_UNUSE;
+    nck->size  = diff - MEP_CHUNK_SIZE;
+    nck->prev  = a_size  + MEP_CHUNK_SIZE;
 
     /*
-     * check if the first piece has next piece so we pass it
+     * check if the first chunk has next chunk so we pass it
      * and fix prev size
     */
-    if (MEP_HAVE_NEXT(pc)) {
-         npc->flags |= MEP_FLAG_NEXT;
-         MEP_NEXT_PIECE(npc)->prev = diff;
+    if (MEP_HAVE_NEXT(ck)) {
+         nck->flags |= MEP_FLAG_NEXT;
+         MEP_NEXT_CHUNK(nck)->prev = diff;
     }
     /*
-     * add our new piece to the new unuse list
+     * add our new chunk to the new unuse list
     */
-    tmp = MEP_UNUSE(npc);
+    tmp = MEP_UNUSE(nck);
     DL_APPEND(mp->unuses, tmp);
     /*
-     * return piece ptr
+     * return chunk ptr
      * and pass only next flag
-     * next one is the new splited piece
+     * next one is the new splited chunk
     */
-    pc->flags = MEP_FLAG_NEXT;
+    ck->flags = MEP_FLAG_NEXT;
 
 down:
-    assert((pc->size - size) <= UINT8_MAX);
-    pc->left = pc->size - size;
-    return MEP_PIECE_PTR(pc);
+    assert((ck->size - size) <= UINT8_MAX);
+    ck->left = ck->size - size;
+    return MEP_CHUNK_PTR(ck);
 }
 
 void *mep_calloc(mep_t *mp, size_t count, size_t size)
