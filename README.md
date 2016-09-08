@@ -7,14 +7,11 @@ libmep is dynamic memory pool for real-time usage
 libmep is licensed under the MIT license.
 
 ## Build
+
 $ sh autogen.sh
-
 $ ./configure
-
 $ make
-
 $ make check
-
 $ make install
 
 ## API
