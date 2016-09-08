@@ -21,7 +21,7 @@
 
 #####  void mep_destroy (mep_t *mp);
 
-#####  void mep_stat (mep_t *mp, mep_stat_t *stat);
+#####  void mep_stats (mep_t *mp, mep_stats_t *stat);
 
 #####  void *mep_alloc (mep_t *mp, size_t size);
 

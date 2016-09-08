@@ -25,8 +25,8 @@ void test_main (TEST_POOL_T *mp)
 {
     void   *ptr, *rptr;
     size_t  size;
-#   ifdef TEST_CHECK_STATS
-    mep_stat_t stat;
+#   ifdef TEST_CHECK_statsS
+    mep_stats_t stats;
 #   endif
 
     size = TEST_LINE_SIZE;
@@ -54,12 +54,12 @@ void test_main (TEST_POOL_T *mp)
     TEST_ASSERT(0 == test_check(rptr, size));
     TEST_SUCS("[PASSED]");
 
-#   ifdef TEST_CHECK_STATS
-    TEST_PRINT("Stats");
-    mep_stat(mp, &stat);
-    TEST_ASSERT(stat.lines == 1);
-    TEST_ASSERT(stat.use_count   == 1);
-    TEST_ASSERT(stat.unuse_count == 1);
+#   ifdef TEST_CHECK_statsS
+    TEST_PRINT("statss");
+    mep_stats(mp, &stats);
+    TEST_ASSERT(stats.lines == 1);
+    TEST_ASSERT(stats.use_count   == 1);
+    TEST_ASSERT(stats.unuse_count == 1);
     TEST_SUCS("[PASSED]");
 #   endif
 
@@ -67,14 +67,14 @@ void test_main (TEST_POOL_T *mp)
     TEST_FREE(mp, rptr);
     TEST_SUCS("[PASSED]");
 
-#   ifdef TEST_CHECK_STATS
-    TEST_PRINT("Stats");
-    mep_stat(mp, &stat);
-    TEST_ASSERT(stat.lines == 1);
-    TEST_ASSERT(stat.use_count   == 0);
-    TEST_ASSERT(stat.unuse_count == 1);
-    TEST_ASSERT(stat.available == TEST_LINE_SIZE);
-    TEST_ASSERT(stat.total == TEST_LINE_SIZE);
+#   ifdef TEST_CHECK_statsS
+    TEST_PRINT("statss");
+    mep_stats(mp, &stats);
+    TEST_ASSERT(stats.lines == 1);
+    TEST_ASSERT(stats.use_count   == 0);
+    TEST_ASSERT(stats.unuse_count == 1);
+    TEST_ASSERT(stats.available == TEST_LINE_SIZE);
+    TEST_ASSERT(stats.total == TEST_LINE_SIZE);
     TEST_SUCS("[PASSED]");
 #   endif
 }

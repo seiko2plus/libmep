@@ -72,13 +72,13 @@ void mep_destroy(mep_t *mp)
     }
 }
 
-void mep_stat(mep_t *mp, mep_stat_t *stat)
+void mep_stats(mep_t *mp, mep_stats_t *stat)
 {
     mep_line_t   *ln;
     mep_chunk_t  *ck;
     assert(mp != NULL && stat != NULL);
 
-    memset(stat, 0, sizeof(mep_stat_t));
+    memset(stat, 0, sizeof(mep_stats_t));
 
     DL_FOREACH(mp->lines, ln) {
         stat->total += ln->size;

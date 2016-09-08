@@ -43,19 +43,19 @@ extern "C" {
 # endif /* MEP_EXTERN */
 
 typedef struct mep_s mep_t;
-typedef struct mep_stat_s {
+typedef struct mep_stats_s {
     size_t lines,
            total,
            available,
            left,
            unuse_count,
            use_count;
-} mep_stat_t;
+} mep_stats_t;
 
 MEP_EXTERN mep_t *mep_new        (mep_t *parent, size_t line_size);
 MEP_EXTERN void   mep_reset      (mep_t *mp);
 MEP_EXTERN void   mep_destroy    (mep_t *mp);
-MEP_EXTERN void   mep_stat       (mep_t *mp, mep_stat_t *stat);
+MEP_EXTERN void   mep_stats      (mep_t *mp, mep_stats_t *stat);
 
 MEP_EXTERN void  *mep_alloc      (mep_t *mp, size_t size);
 MEP_EXTERN void  *mep_calloc     (mep_t *mp, size_t count, size_t size);
