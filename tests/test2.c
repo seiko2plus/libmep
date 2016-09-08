@@ -29,8 +29,8 @@ void test_main (TEST_POOL_T *mp)
     uint  *size_arr;
     uint   i;
     size_t total_alloc = 0;
-#   ifdef TEST_CHECK_STATS
-    mep_stat_t stat;
+#   ifdef TEST_CHECK_statsS
+    mep_stats_t stats;
 #   endif
 
     TEST_PRINT("Allocate ptr array for %u", ALLOC_NUM);
@@ -61,14 +61,14 @@ void test_main (TEST_POOL_T *mp)
     TEST_FREE(mp, size_arr);
 
 
-#   ifdef TEST_CHECK_STATS
-    TEST_PRINT("Stats");
-    mep_stat(mp, &stat);
-    TEST_ASSERT(stat.lines == 1);
-    TEST_ASSERT(stat.use_count   == 0);
-    TEST_ASSERT(stat.unuse_count == 1);
-    TEST_ASSERT(stat.available == TEST_LINE_SIZE);
-    TEST_ASSERT(stat.total == TEST_LINE_SIZE);
+#   ifdef TEST_CHECK_statsS
+    TEST_PRINT("statss");
+    mep_stats(mp, &stats);
+    TEST_ASSERT(stats.lines == 1);
+    TEST_ASSERT(stats.use_count   == 0);
+    TEST_ASSERT(stats.unuse_count == 1);
+    TEST_ASSERT(stats.available == TEST_LINE_SIZE);
+    TEST_ASSERT(stats.total == TEST_LINE_SIZE);
     TEST_SUCS("[PASSED]");
 #   endif
 }
