@@ -24,5 +24,6 @@ This license applies to all parts of libmep that are not externally
 maintained libraries.
 
 The externally maintained libraries used by libmep are:
-    - stdint-msvc2008.h (from msinttypes), copyright Alexander Chemeris. Three clause BSD license.
-    - utlist.h (from uthash),  copyright Troy D. Hanson. BSD license3
+
+        - stdint-msvc2008.h (from msinttypes), copyright Alexander Chemeris. Three clause BSD license.
+        - utlist.h (from uthash),  copyright Troy D. Hanson. BSD license3
