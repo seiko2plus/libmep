@@ -21,6 +21,18 @@
 
 #include "mep_p.h"
 
+/*
+ * That's how pool looks like
+ * default line
+ * +------+-------+------------+--------+--------------------------+------------+
+ * | pool | line  | prev chunk |  chunk >  unuse  or    block      | next chunk |
+ * +------+-------+------------+--------+--------------------------+------------+
+ * new line if we need more chunks
+ * +-------+------------+--------+--------------------------+------------+
+ * | line  | prev chunk |  chunk >  unuse  or    block      | next chunk |
+ * +-------+------------+--------+--------------------------+------------+
+*/
+
 mep_t *mep_new(mep_t *parent, size_t line_size)
 {
     mep_t *mp;
