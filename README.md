@@ -10,7 +10,7 @@
     $ sh autogen.sh
     $ ./configure
     $ make
-    $ make check
+    $ make check # optional
     $ make install
 
 ## API
@@ -40,3 +40,5 @@
 #####  size_t mep_align_size (void);
 
 #####  char *mep_strdup (mep_t *mp, const char *s);
+
+#####  char *mep_strndup (mep_t *mp, const char *s, size_t n);
