@@ -114,6 +114,8 @@ down:
 void *mep_calloc(mep_t *mp, size_t count, size_t size)
 {
     void *ptr;
+    if (size > (size_t)-1 / count)
+        return NULL; /* overflow */
     if ( NULL == (ptr = mep_alloc(mp, size * count)) )
         return NULL;
     memset(ptr, 0, size * count); /* todo we need memset depend on memory alignment to gunrentee speed */

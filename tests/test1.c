@@ -77,4 +77,9 @@ void test_main (TEST_POOL_T *mp)
     TEST_ASSERT(stats.total == TEST_LINE_SIZE);
     TEST_SUCS("[PASSED]");
 #   endif
+
+    TEST_PRINT("Overflow detection");
+    ptr = TEST_CALLOC(mp, -1, -1);
+    TEST_ASSERT(ptr == NULL);
+    TEST_SUCS("[PASSED]");
 }
