@@ -116,13 +116,13 @@ void mep_stats(mep_t *mp, mep_stats_t *stat)
 }
 
 
-size_t mep_size_of(void *ptr)
+size_t mep_sizeof(void *ptr)
 {
     mep_chunk_t *ck;
     assert(ptr != NULL);
 
     ck  = MEP_CHUNK(ptr);
-    return ck->size;
+    return ck->size - ck->left;
 }
 
 size_t mep_max_line(void)

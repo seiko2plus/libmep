@@ -54,6 +54,7 @@ do { \
 # define TEST_CALLOC(POOL, COUNT, SIZE) mep_calloc(POOL, COUNT, SIZE)
 # define TEST_REALLOC(POOL, PTR, SIZE)  mep_realloc(POOL, PTR, SIZE)
 # define TEST_FREE(POOL, PTR)           mep_free(POOL, PTR)
+# define TEST_SIZEOF(PTR)               mep_sizeof(PTR)
 
 # define TEST_POOL_T       mep_t
 # define TEST_LINE_SIZE    (1024 * 1024 * 10)
