@@ -36,6 +36,10 @@ void test_main (TEST_POOL_T *mp)
     TEST_ASSERT(ptr != NULL);
     TEST_SUCS("[PASSED]");
 
+    TEST_PRINT("Sizeof");
+    TEST_ASSERT(size == TEST_SIZEOF(ptr));
+    TEST_SUCS("[PASSED]");
+
     TEST_PRINT("Fill");
     test_fill(ptr, size);
     TEST_SUCS("[PASSED]");
@@ -52,6 +56,10 @@ void test_main (TEST_POOL_T *mp)
 
     TEST_PRINT("Check");
     TEST_ASSERT(0 == test_check(rptr, size));
+    TEST_SUCS("[PASSED]");
+
+    TEST_PRINT("Sizeof");
+    TEST_ASSERT(size == TEST_SIZEOF(rptr));
     TEST_SUCS("[PASSED]");
 
 #   ifdef TEST_CHECK_STATS
