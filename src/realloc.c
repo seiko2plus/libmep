@@ -35,7 +35,7 @@ void *mep_realloc(mep_t *mp, void *ptr, size_t size)
     mep_size_t    need, a_size;
     int64_t       diff;
 
-    assert(mp != NULL && size <= MEP_MAX_ALLOC);
+    assert(mp != NULL);
 
     if (ptr == NULL) {
         if (size == 0)
@@ -47,6 +47,9 @@ void *mep_realloc(mep_t *mp, void *ptr, size_t size)
         mep_free(mp, ptr);
         return NULL;
     }
+
+    if (size > MEP_MAX_ALLOC)
+        return NULL;
 
     if (size < MEP_UNUSE_SIZE)
         a_size = MEP_ALIGN(MEP_UNUSE_SIZE);

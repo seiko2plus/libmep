@@ -28,10 +28,13 @@ void *mep_alloc(mep_t *mp, size_t size)
     mep_unuse_t  *tmp, *unck;
     mep_size_t    diff, a_size, line_size;
 
-    assert(mp != NULL && size <= MEP_MAX_ALLOC);
+    assert(mp != NULL);
+
+    if (size > MEP_MAX_ALLOC)
+        return NULL;
 
     if (size < MEP_UNUSE_SIZE)
-        a_size = MEP_ALIGN(MEP_UNUSE_SIZE);
+        a_size = MEP_ALIGN(MEP_UNUSE_SIZE);    
     else
         a_size = MEP_ALIGN(size);
 
