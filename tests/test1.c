@@ -25,7 +25,7 @@ void test_main (TEST_POOL_T *mp)
 {
     void   *ptr, *rptr;
     size_t  size;
-#   ifdef TEST_CHECK_statsS
+#   ifdef TEST_CHECK_STATS
     mep_stats_t stats;
 #   endif
 
@@ -54,8 +54,8 @@ void test_main (TEST_POOL_T *mp)
     TEST_ASSERT(0 == test_check(rptr, size));
     TEST_SUCS("[PASSED]");
 
-#   ifdef TEST_CHECK_statsS
-    TEST_PRINT("statss");
+#   ifdef TEST_CHECK_STATS
+    TEST_PRINT("Stats");
     mep_stats(mp, &stats);
     TEST_ASSERT(stats.lines == 1);
     TEST_ASSERT(stats.use_count   == 1);
@@ -67,8 +67,8 @@ void test_main (TEST_POOL_T *mp)
     TEST_FREE(mp, rptr);
     TEST_SUCS("[PASSED]");
 
-#   ifdef TEST_CHECK_statsS
-    TEST_PRINT("statss");
+#   ifdef TEST_CHECK_STATS
+    TEST_PRINT("Stats");
     mep_stats(mp, &stats);
     TEST_ASSERT(stats.lines == 1);
     TEST_ASSERT(stats.use_count   == 0);
