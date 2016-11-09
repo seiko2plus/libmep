@@ -29,7 +29,7 @@ void test_main (TEST_POOL_T *mp)
     uint  *size_arr;
     uint   i;
     size_t total_alloc = 0;
-#   ifdef TEST_CHECK_statsS
+#   ifdef TEST_CHECK_STATS
     mep_stats_t stats;
 #   endif
 
@@ -61,8 +61,8 @@ void test_main (TEST_POOL_T *mp)
     TEST_FREE(mp, size_arr);
 
 
-#   ifdef TEST_CHECK_statsS
-    TEST_PRINT("statss");
+#   ifdef TEST_CHECK_STATS
+    TEST_PRINT("Stats");
     mep_stats(mp, &stats);
     TEST_ASSERT(stats.lines == 1);
     TEST_ASSERT(stats.use_count   == 0);
