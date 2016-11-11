@@ -99,7 +99,7 @@ void mep_stats(mep_t *mp, mep_stats_t *stat)
         ck = MEP_CHUNK_LN(ln);
 
         for(;;) {
-            if (ck->flags & MEP_FLAG_UNUSE) {
+            if (MEP_IS_UNUSE(ck)) {
                 stat->unuse_count++;
                 stat->available += ck->size;
             } else {
@@ -107,7 +107,7 @@ void mep_stats(mep_t *mp, mep_stats_t *stat)
                 stat->left += ck->left;
             }
 
-            if (!(ck->flags & MEP_FLAG_NEXT))
+            if (!MEP_HAVE_NEXT(ck))
                 break;
 
             ck = MEP_NEXT_CHUNK(ck);
