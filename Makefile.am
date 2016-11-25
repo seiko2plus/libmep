@@ -25,41 +25,36 @@
 ACLOCAL_AMFLAGS     = -I m4
 include_HEADERS     = include/mep.h
 
-AM_CPPFLAGS         =  -I$(top_srcdir)/include \
-                       -I$(top_srcdir)/src
+AM_CPPFLAGS         = -I$(top_srcdir)/include \
+                      -I$(top_srcdir)/src
 CLEANFILES          =
 
 lib_LTLIBRARIES     = libmep.la
-#libmep_la_CFLAGS   = @CFLAGS@
+libmep_la_CFLAGS    = @CFLAGS@
 libmep_la_LDFLAGS   = -no-undefined -version-info 1:0:0
-libmep_la_SOURCES   = include/mep.h \
-                      src/mep.c \
-                      src/mep_p.h \
+libmep_la_SOURCES   = src/mep.c \
                       src/alloc.c \
                       src/realloc.c \
                       src/free.c \
-                      src/string.c \
-                      src/stdint-msvc2008.h \
-                      src/utlist.h
+                      src/string.c
 
-if MEP_TESTS
+MEP_TESTS_N         = mep_test1 mep_test2 mep_test3
+TESTS               = $(MEP_TESTS_N)
+check_PROGRAMS      = $(MEP_TESTS_N)
 
-TESTS               = mep_test1 mep_test2 mep_test3
-noinst_PROGRAMS     = mep_test1 mep_test2 mep_test3
+MEP_TEST_COMMON     = tests/test.c
 
-mep_test1_SOURCES   = tests/test.h \
-                      tests/test.c \
-                      tests/test1.c
+mep_test1_SOURCES   = $(MEP_TEST_COMMON) tests/test1.c
 mep_test1_LDADD     = libmep.la
 
-mep_test2_SOURCES   = tests/test.h \
-                      tests/test.c \
-                      tests/test2.c
+mep_test2_SOURCES   = $(MEP_TEST_COMMON) tests/test2.c
 mep_test2_LDADD     = libmep.la
 
-mep_test3_SOURCES   = tests/test.h \
-                      tests/test.c \
-                      tests/test3.c
+mep_test3_SOURCES   = $(MEP_TEST_COMMON) tests/test3.c
 mep_test3_LDADD     = libmep.la
 
+if MEP_BENCHMARK
+noinst_PROGRAMS                = mep_benchmark_alloc
+mep_benchmark_alloc_SOURCES    = benchmark/benchmark.h benchmark/benchmark.c benchmark/alloc.c
+mep_benchmark_alloc_LDADD      = libmep.la
 endif
