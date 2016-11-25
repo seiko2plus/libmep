@@ -94,18 +94,15 @@ fi
 
 AC_SUBST(CFLAGS)
 
+
 #########
-# Enable Tests
+# Enable Benchmark
 ###################
 
-# ---------------------------------------------------------------------
-# Conditional variables
-# ---------------------------------------------------------------------
+AC_ARG_ENABLE(benchmark,
+        AC_HELP_STRING( [--enable-benchmark], [Build benchmark programs (default=no)]),, enable_benchmark=no)
 
-AC_ARG_ENABLE(tests,
-        AC_HELP_STRING( [--enable-tests], [Build test programs (default=no)]),, enable_tests=yes)
-
-AM_CONDITIONAL(MEP_TESTS, test x$enable_tests = xyes)
+AM_CONDITIONAL(MEP_BENCHMARK, test x$enable_benchmark = xyes)
 
 AM_MAINTAINER_MODE
 
@@ -122,6 +119,6 @@ echo "Configuration:"
 echo ""
 echo "  LIBDIR:               $libdir"
 echo "  DEBUG:                $enable_debug"
-echo "  TESTS:                $enable_tests"
+echo "  BENCHMARK:            $enable_benchmark"
 echo "  MAX SIZE:             $enable_maxsize"
 echo "  MEMORY ALIGNMENT:     $set_alignment"
