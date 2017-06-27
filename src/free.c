@@ -21,6 +21,7 @@
 
 # include "mep_p.h"
 
+
 /*
 ******** ********** ******** ********** ********
 * USED *** UNUSE *** FREE *** UNUSE *** USED *
@@ -28,48 +29,86 @@
 */
 void mep_free(mep_t *mp, void *ptr)
 {
-    mep_chunk_t  *chunk, *tmp;
-    mep_line_t   *ln;
+    mep_chunk_t  *ck;
+
     assert(mp != NULL && ptr != NULL);
+    ck  = CHUNK_FROM_PTR(ptr);
+    assert(!CHUNK_IS_UNUSED(ck));
 
-    chunk  = MEP_CHUNK(ptr);
-    assert(!MEP_IS_UNUSE(chunk));
+    mep_free_chunk(mp, ck);
+}
 
-    if (MEP_HAVE_PREV(chunk)) {
-        tmp = MEP_PREV_CHUNK(chunk);
+void mep_free_chunk(mep_t *mp, mep_chunk_t *ck)
+{
+    mep_chunk_t *tck;
+    mep_line_t   *ln;
 
-        if (MEP_IS_UNUSE(tmp)) {
-            MEP_MERGE(tmp, chunk);
-            chunk = tmp;
-            goto next; /* escape adding to unuse since tmp already there */
+    if (CHUNK_HAVE_PREV(ck)) {
+        tck = PREV_CHUNK(ck);
+        if (CHUNK_IS_UNUSED(tck)) {
+            CHUNK_MERGE(tck, ck);
+            ck = tck;
+            goto next;
         }
     }
 
-    MEP_ADD_UNUSE(mp, chunk);
+    ADD_UNUSED(mp, ck);
 
 next:
-    if (MEP_HAVE_NEXT(chunk)) {
-        tmp = MEP_NEXT_CHUNK(chunk);
-
-        if (MEP_IS_UNUSE(tmp)) {
-            MEP_REMOVE_UNUSE(mp, tmp);
-            MEP_MERGE(chunk, tmp);
+    if (CHUNK_HAVE_NEXT(ck)) {
+        tck = NEXT_CHUNK(ck);
+        if (CHUNK_IS_UNUSED(tck)) {
+            REMOVE_UNUSED(mp, tck);
+            CHUNK_MERGE(ck, tck);
         }
     }
 
     /* Shrink memory pool and free unused lines */
-    if (!MEP_HAVE_PREV(chunk) && !MEP_HAVE_NEXT(chunk)) {
-        ln = (mep_line_t*) MEP_PTR(chunk  - MEP_LINE_SIZE);
+    if (!CHUNK_HAVE_PREV(ck) && !CHUNK_HAVE_NEXT(ck)) {
+        ln = (mep_line_t*) MEP_PTR(ck  - LINE_SIZE);
 
         /* is not the first line */
         if (ln != (mep_line_t*) MEP_PTR(mp + MEP_SIZE)) {
-            MEP_REMOVE_UNUSE(mp, chunk);
-            DL_DELETE(mp->lines, ln);
+            REMOVE_UNUSED(mp, ck);
+            DL_DELETE(mp->ln_h, ln);
 
             if (mp->parent)
                 mep_free(mp->parent, ln);
             else
                 mep_align_free(ln);
         }
+    }
+}
+
+void mep_free_over(mep_t *mp, mep_chunk_t *ck, uint32_t size)
+{
+    mep_chunk_t *nck;
+    uint32_t     dif;
+
+    dif = ck->size - size;
+
+    if (dif < MEP_SPLIT_SIZE)
+        return;
+
+    ck->size = size;
+    nck = NEXT_CHUNK(ck);
+    nck->prev = ck;
+    nck->size = dif - CHUNK_SIZE;
+
+    DL_APPEND(mp->un_h, UNUSE_FROM_CHUNK(nck));
+
+    if (!CHUNK_HAVE_NEXT(ck)) {
+        nck->flags = MEP_FLAG_UNUSED;
+        ck->flags |= MEP_FLAG_NEXT;
+        return;
+    }
+
+    nck->flags = MEP_FLAG_NEXT | MEP_FLAG_UNUSED;
+    ck = NEXT_CHUNK(nck);
+    ck->prev = nck;
+
+    if (CHUNK_IS_UNUSED(ck)) {
+        REMOVE_UNUSED(mp, ck);
+        CHUNK_MERGE(nck, ck);
     }
 }

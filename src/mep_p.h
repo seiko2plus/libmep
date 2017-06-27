@@ -45,15 +45,26 @@ extern "C" {
 #   include <stdint.h>
 # endif
 
+# if defined __GNUC__ || defined __llvm__
+#   ifndef likely
+#       define likely(x) __builtin_expect(!!(x), 1)
+#   endif
+#   ifndef unlikely
+#       define unlikely(x) __builtin_expect(!!(x), 0)
+#   endif
+# else
+#   define likely(x) (x)
+#   define unlikely(x) (x)
+# endif
+
 # if __STDC_VERSION__ >= 199901L || __GNUC__ >= 3
 #   define MEP_INLINE static inline
 # else
 #   define MEP_INLINE static
 # endif
 
-# ifndef MEP_ALIGN_SIZE
-#   define MEP_ALIGN_SIZE 16
-# endif
+/* fixed align size , 16 is good enough*/
+# define MEP_ALIGN_SIZE 16
 
 /*
  * MEP_SPLIT_SIZE
@@ -61,118 +72,110 @@ extern "C" {
  * Leave margin for align lose < MEP_ALIGN_SIZE
  * mep_chunk_s::left can rich the max, assert cause
 */
-
 # ifndef MEP_SPLIT_SIZE
-#   define MEP_SPLIT_SIZE (UINT8_MAX /2)
+#   define MEP_SPLIT_SIZE    (UINT8_MAX /2)
 # endif
 
-# if MEP_ALIGN_SIZE > 16
-#   define MEP_MAX_SIZE
-# endif
-
-# ifdef MEP_MAX_SIZE
-    typedef size_t mep_size_t;
-#   define MEP_SIZE_MAX SIZE_MAX
-# else
-#   if MEP_ALIGN_SIZE <= 8
-        typedef uint16_t mep_size_t;
-#       define MEP_SIZE_MAX UINT16_MAX
-#   elif MEP_ALIGN_SIZE <= 16
-        typedef uint32_t mep_size_t;
-#       define MEP_SIZE_MAX UINT32_MAX
-#   endif
-# endif
-
-# define MEP_MAX_LINE_SIZE  (MEP_ALIGN(MEP_SIZE_MAX - MEP_ALIGN_SIZE) - (MEP_SIZE + MEP_LINE_SIZE))
+# define MEP_SIZE_MAX        UINT32_MAX
+# define MEP_MAX_LINE_SIZE   (MEP_ALIGN(MEP_SIZE_MAX - MEP_ALIGN_SIZE) - (MEP_SIZE + LINE_SIZE))
 
 # ifndef MEP_MAX_ALLOC
-#   define MEP_MAX_ALLOC    (MEP_MAX_LINE_SIZE - MEP_CHUNK_SIZE)
+#   define MEP_MAX_ALLOC     (MEP_MAX_LINE_SIZE - CHUNK_SIZE)
 # endif
 
-# define MEP_ALIGN(X)       (((X) + MEP_ALIGN_SIZE - 1) & ~(MEP_ALIGN_SIZE - 1))
-# define MEP_ALIGN_OF(X)    MEP_ALIGN(sizeof(X))
+# define MEP_ALIGN(X)        (((X) + MEP_ALIGN_SIZE - 1) & ~(MEP_ALIGN_SIZE - 1))
+# define MEP_ALIGN_OF(X)     MEP_ALIGN(sizeof(X))
+# define MEP_PTR(X)          ((uintptr_t) X)
 
-# define MEP_CHUNK_SIZE     MEP_ALIGN_OF(mep_chunk_t)
-# define MEP_LINE_SIZE      MEP_ALIGN_OF(mep_line_t)
-# define MEP_SIZE           MEP_ALIGN_OF(mep_t)
-# define MEP_UNUSE_SIZE     (sizeof(mep_unuse_t))
+# define LINE_SIZE           MEP_ALIGN_OF(mep_line_t)
+# define MEP_SIZE            MEP_ALIGN_OF(mep_t)
+# define CHUNK_SIZE          MEP_ALIGN_OF(mep_chunk_t)
+# define UNUSED_SIZE         MEP_ALIGN_OF(mep_unused_t)
 
-# define MEP_PTR(X)         ((uintptr_t) X)
+# define CHUNK_FSIZE(C)      (C->size + CHUNK_SIZE)
+# define CHUNK_HAVE_PREV(C)  (C->prev)
+# define CHUNK_HAVE_NEXT(C)  (C->flags & MEP_FLAG_NEXT)
+# define CHUNK_IS_UNUSED(C)  (C->flags & MEP_FLAG_UNUSED)
+# define CHUNK_FROM_PTR(PTR) ((mep_chunk_t*)  MEP_PTR(PTR - CHUNK_SIZE))
+# define CHUNK_FROM_LINE(LN) ((mep_chunk_t*)  MEP_PTR(LN + LINE_SIZE))
+# define CHUNK_FROM_UN(UN)   ((mep_chunk_t*)  MEP_PTR(UN - UNUSED_SIZE))
 
-# define MEP_CHUNK(PTR)     ((mep_chunk_t*)  MEP_PTR(PTR - MEP_CHUNK_SIZE))
-# define MEP_CHUNK_PTR(CK)  ((void*)         MEP_PTR(CK  + MEP_CHUNK_SIZE))
-# define MEP_CHUNK_LN(LN)   ((mep_chunk_t*)  MEP_PTR(LN  + MEP_LINE_SIZE))
-# define MEP_CHUNK_UNUSE(U) ((mep_chunk_t*)  MEP_PTR(U   - MEP_UNUSE_SIZE))
+# define NEXT_CHUNK(C)       ((mep_chunk_t*)  MEP_PTR(C + (C->size + CHUNK_SIZE)))
+# define PREV_CHUNK(C)       (C->prev)
 
-# define MEP_HAVE_PREV(CK)  (CK->prev > 0)
-# define MEP_HAVE_NEXT(CK)  (CK->flags & MEP_FLAG_NEXT)
-# define MEP_NEXT_CHUNK(CK) ((mep_chunk_t*)  MEP_PTR(CK  + (CK->size + MEP_CHUNK_SIZE)))
-# define MEP_PREV_CHUNK(CK) ((mep_chunk_t*)  MEP_PTR(CK  - CK->prev))
+# define UNUSE_FROM_CHUNK(C) ((mep_unused_t*) MEP_PTR(C + CHUNK_SIZE))
+# define PTR_CHUNK(C)        (((void*) MEP_PTR(C + CHUNK_SIZE)))
 
-# define MEP_IS_UNUSE(CK)   (CK->flags & MEP_FLAG_UNUSE)
-# define MEP_UNUSE(CK)      ((mep_unuse_t*)  MEP_PTR(CK  + MEP_CHUNK_SIZE))
-
-
-# define MEP_REMOVE_UNUSE(MP, CK) \
-do { \
-    (CK)->flags &= ~MEP_FLAG_UNUSE; \
-    DL_DELETE((MP)->unuses, MEP_UNUSE(CK)); \
-} while(0)  \
-
-# define MEP_ADD_UNUSE(MP, CK) \
-do { \
-    (CK)->flags |= MEP_FLAG_UNUSE; \
-    DL_APPEND((MP)->unuses, MEP_UNUSE(CK)); \
+# define CHUNK_MERGE(C1, C2)            \
+do {                                    \
+    (C1)->size += CHUNK_FSIZE(C2);      \
+    if (CHUNK_HAVE_NEXT(C2)) {          \
+        (C1)->flags |= MEP_FLAG_NEXT;   \
+        NEXT_CHUNK(C2)->prev = (C1);    \
+    } else {                            \
+        (C1)->flags &= ~MEP_FLAG_NEXT;  \
+    }                                   \
 } while(0)
 
-# define MEP_MERGE(CK1, CK2) \
-do { \
-    (CK1)->size += (CK2)->size + MEP_CHUNK_SIZE; \
-    if (MEP_HAVE_NEXT(CK2)) { \
-        (CK1)->flags |= MEP_FLAG_NEXT; \
-        MEP_NEXT_CHUNK(CK2)->prev = (CK1)->size + MEP_CHUNK_SIZE; \
-    } else { \
-        (CK1)->flags &= ~MEP_FLAG_NEXT; \
-    } \
+# define REMOVE_UNUSED(MP, C)                   \
+do {                                            \
+    (C)->flags &= ~MEP_FLAG_UNUSED;             \
+    DL_DELETE((MP)->un_h, UNUSE_FROM_CHUNK(C)); \
+} while(0)
+
+# define ADD_UNUSED(MP, C)                      \
+do {                                            \
+    (C)->flags |= MEP_FLAG_UNUSED;              \
+    DL_APPEND((MP)->un_h, UNUSE_FROM_CHUNK(C)); \
 } while(0)
 
 
-typedef struct mep_unuse_s
-{
-    struct mep_unuse_s *next,
-                       *prev;
-} mep_unuse_t;
 
-typedef struct mep_chunk_s
-{
-    mep_size_t size,
-               prev;
-    uint8_t    flags,
-               left;
-} mep_chunk_t;
+/* types */
+typedef struct mep_chunk_s mep_chunk_t;
+typedef struct mep_line_s  mep_line_t;
+typedef struct mep_unused_s mep_unused_t;
 
-typedef struct mep_line_s
+/**
+ * @brief The mep_chunk_s struct
+ */
+struct mep_chunk_s
 {
-    struct mep_line_s *next,
-                      *prev;
-    mep_size_t         size;
-} mep_line_t;
+    uint32_t size;
+    uint16_t left;
+    uint16_t flags;
+    mep_chunk_t *prev;
+};
+
+struct mep_unused_s
+{
+    mep_unused_t *next,
+                 *prev;
+};
+
+struct mep_line_s
+{
+    mep_line_t *next,
+               *prev;
+    uint32_t    size;
+};
 
 struct mep_s
 {
-    mep_line_t   *lines;
-    mep_unuse_t  *unuses;
+    mep_line_t   *ln_h;
+    mep_unused_t *un_h;
     mep_t        *parent;
 };
 
 enum
 {
     MEP_FLAG_NEXT   = 0x02,
-    MEP_FLAG_UNUSE  = 0x04
+    MEP_FLAG_UNUSED = 0x04
 };
 
 void mep_init(mep_t *mp, size_t line_size);
-
+void mep_free_chunk(mep_t *mp, mep_chunk_t *ck);
+void mep_free_over(mep_t *mp, mep_chunk_t *ck, uint32_t size);
 
 MEP_INLINE
 void *mep_align_alloc(size_t size)

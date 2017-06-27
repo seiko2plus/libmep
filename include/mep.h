@@ -46,7 +46,6 @@ extern "C" {
  * @brief mep_t
  * Memory pool type
  */
-
 typedef struct mep_s mep_t;
 
 /**
@@ -196,32 +195,16 @@ MEP_EXTERN void mep_free (mep_t *mp, void *ptr);
  * @param ptr
  * Allocated pool ptr
  * @return
- * size of Allocated ptr in bytes
+ * Aligned size of allocated ptr in bytes
  */
-MEP_EXTERN size_t mep_sizeof (void *ptr);
-
+MEP_EXTERN size_t mep_sizeof (const void *ptr);
 /**
- * @brief mep_max_alloc
- *
+ * @brief mep_len
+ * Allocated pool ptr
  * @return
- * the maximum size that memory pool can allocate
+ * Exact size of allocated ptr in bytes
  */
-MEP_EXTERN size_t mep_max_alloc  (void);
-
-/**
- * @brief mep_max_line
- * @return
- * the maximum size of memory pool line can be
- */
-MEP_EXTERN size_t mep_max_line   (void);
-
-/**
- * @brief mep_align_size
- * @return
- * current memory pool alignment size default size is 16 unless u changed in compiling time
- */
-MEP_EXTERN size_t mep_align_size (void);
-
+MEP_EXTERN size_t mep_len (const void *ptr);
 /**
  * @brief mep_strdup
  * duplicate a string like strdup()

@@ -56,28 +56,6 @@ AC_TYPE_UINT64_T
 AC_CHECK_FUNC(posix_memalign, AC_DEFINE(MEP_HAVE_POSIX_ALIGN))
 AC_CHECK_FUNC(memalign, AC_DEFINE(MEP_HAVE_MEMALIGN))
 
-
-#########
-# Memory Alignment
-###################
-AC_ARG_ENABLE(alignment,
-        AC_HELP_STRING([--set-alignment], [Set memory alignment (default=16)]),, set_alignment=16)
-
-if test x$set_alignment != x16; then
-    AC_DEFINE([MEP_ALIGN_SIZE], [x$set_alignment])
-fi
-
-#########
-# Enable Max Size
-###################
-AC_ARG_ENABLE(debug,
-        AC_HELP_STRING([--enable-maxsize], Increase line and allocation size to max [(default=no)]),, enable_maxsize=no)
-
-if test x$enable_maxsize = xyes; then
-    AC_DEFINE(MEP_MAX_SIZE)
-fi
-
-
 #########
 # Enable Debug
 ###################
@@ -120,5 +98,3 @@ echo ""
 echo "  LIBDIR:               $libdir"
 echo "  DEBUG:                $enable_debug"
 echo "  BENCHMARK:            $enable_benchmark"
-echo "  MAX SIZE:             $enable_maxsize"
-echo "  MEMORY ALIGNMENT:     $set_alignment"

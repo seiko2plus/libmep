@@ -33,11 +33,7 @@
 
 #####  size_t mep_sizeof (void *ptr);
 
-#####  size_t mep_max_alloc (void);
-
-#####  size_t mep_max_line (void);
-
-#####  size_t mep_align_size (void);
+#####  size_t mep_len (void *ptr);
 
 #####  char *mep_strdup (mep_t *mp, const char *s);
 

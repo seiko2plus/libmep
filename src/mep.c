@@ -19,7 +19,7 @@
  * IN THE SOFTWARE.
 */
 
-#include "mep_p.h"
+# include "mep_p.h"
 
 /*
  * That's how pool looks like
@@ -41,11 +41,11 @@ mep_t *mep_new(mep_t *parent, size_t line_size)
     line_size = MEP_ALIGN(line_size);
 
     if (parent)
-        mp = mep_alloc(parent, line_size + MEP_SIZE + MEP_LINE_SIZE + MEP_CHUNK_SIZE);
+        mp = mep_alloc(parent, line_size + MEP_SIZE + LINE_SIZE + CHUNK_SIZE);
     else
-        mp = mep_align_alloc(line_size + MEP_SIZE + MEP_LINE_SIZE + MEP_CHUNK_SIZE);
+        mp = mep_align_alloc(line_size + MEP_SIZE + LINE_SIZE + CHUNK_SIZE);
 
-    if (mp) {
+    if (likely(mp)) {
         mp->parent = parent;
         mep_init(mp, line_size);
     }
@@ -58,14 +58,14 @@ void mep_reset(mep_t *mp)
     assert(mp != NULL);
 
     if (mp->parent) {
-        DL_FOREACH_SAFE(mp->lines->next, ln, tmp)
+        DL_FOREACH_SAFE(mp->ln_h->next, ln, tmp)
             mep_free(mp->parent, ln);
     } else {
-        DL_FOREACH_SAFE(mp->lines->next, ln, tmp)
+        DL_FOREACH_SAFE(mp->ln_h->next, ln, tmp)
             mep_align_free(ln);
     }
 
-    mep_init(mp, mp->lines->size);
+    mep_init(mp, mp->ln_h->size);
 }
 
 void mep_destroy(mep_t *mp)
@@ -74,11 +74,11 @@ void mep_destroy(mep_t *mp)
     assert(mp != NULL);
 
     if (mp->parent) {
-        DL_FOREACH_SAFE(mp->lines->next, ln, tmp)
+        DL_FOREACH_SAFE(mp->ln_h->next, ln, tmp)
             mep_free(mp->parent, ln);
         mep_free(mp->parent, mp);
     } else {
-        DL_FOREACH_SAFE(mp->lines->next, ln, tmp)
+        DL_FOREACH_SAFE(mp->ln_h->next, ln, tmp)
             mep_align_free(ln);
         mep_align_free(mp);
     }
@@ -92,14 +92,14 @@ void mep_stats(mep_t *mp, mep_stats_t *stat)
 
     memset(stat, 0, sizeof(mep_stats_t));
 
-    DL_FOREACH(mp->lines, ln) {
+    DL_FOREACH(mp->ln_h, ln) {
         stat->total += ln->size;
         stat->lines++;
 
-        ck = MEP_CHUNK_LN(ln);
+        ck = CHUNK_FROM_LINE(ln);
 
         for(;;) {
-            if (MEP_IS_UNUSE(ck)) {
+            if (CHUNK_IS_UNUSED(ck)) {
                 stat->unuse_count++;
                 stat->available += ck->size;
             } else {
@@ -107,37 +107,31 @@ void mep_stats(mep_t *mp, mep_stats_t *stat)
                 stat->left += ck->left;
             }
 
-            if (!MEP_HAVE_NEXT(ck))
+            if (!CHUNK_HAVE_NEXT(ck))
                 break;
 
-            ck = MEP_NEXT_CHUNK(ck);
+            ck = NEXT_CHUNK(ck);
         }
     }
 }
 
 
-size_t mep_sizeof(void *ptr)
+size_t mep_sizeof(const void *ptr)
 {
     mep_chunk_t *ck;
     assert(ptr != NULL);
 
-    ck  = MEP_CHUNK(ptr);
+    ck  = CHUNK_FROM_PTR(ptr);
+    return ck->size;
+}
+
+size_t mep_len(const void *ptr)
+{
+    mep_chunk_t *ck;
+    assert(ptr != NULL);
+
+    ck  = CHUNK_FROM_PTR(ptr);
     return ck->size - ck->left;
-}
-
-size_t mep_max_line(void)
-{
-    return MEP_MAX_LINE_SIZE;
-}
-
-size_t mep_max_alloc(void)
-{
-    return MEP_MAX_ALLOC;
-}
-
-size_t mep_align_size(void)
-{
-    return MEP_ALIGN_SIZE;
 }
 
 void mep_init(mep_t *mp, size_t line_size)
@@ -145,17 +139,16 @@ void mep_init(mep_t *mp, size_t line_size)
     mep_line_t   *ln;
     mep_chunk_t  *ck;
 
-    mp->lines  = NULL;
-    mp->unuses = NULL;
+    mp->ln_h = NULL;
+    mp->un_h = NULL;
 
     ln = (mep_line_t*) MEP_PTR(mp + MEP_SIZE);
     ln->size = line_size;
-    DL_APPEND(mp->lines, ln);
+    DL_APPEND(mp->ln_h, ln);
 
-    ck        = MEP_CHUNK_LN(ln);
+    ck        = CHUNK_FROM_LINE(ln);
     ck->size  = line_size;
-    ck->prev  = 0;
-    ck->flags = MEP_FLAG_UNUSE;
-
-    MEP_ADD_UNUSE(mp, ck);
+    ck->prev  = NULL;
+    ck->flags = MEP_FLAG_UNUSED;
+    DL_APPEND(mp->un_h, UNUSE_FROM_CHUNK(ck));
 }

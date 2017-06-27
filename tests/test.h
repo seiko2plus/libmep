@@ -22,7 +22,7 @@
 # ifndef TEST_H
 # define TEST_H
 
-# include "../include/mep.h"
+# include "../src/mep_p.h"
 # include <stdlib.h>
 # include <stdio.h>
 # include <string.h>
@@ -55,6 +55,8 @@ do { \
 # define TEST_REALLOC(POOL, PTR, SIZE)  mep_realloc(POOL, PTR, SIZE)
 # define TEST_FREE(POOL, PTR)           mep_free(POOL, PTR)
 # define TEST_SIZEOF(PTR)               mep_sizeof(PTR)
+# define TEST_LEN(PTR)                  mep_len(PTR)
+# define TEST_ALIGN(X)                  MEP_ALIGN(X)
 
 # define TEST_POOL_T       mep_t
 # define TEST_LINE_SIZE    (1024 * 1024 * 10)
